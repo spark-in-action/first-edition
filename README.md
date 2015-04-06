@@ -9,38 +9,41 @@ The repo contains book listings organized by programming language (if applicable
 ```
 sourcecode-listings
   ├── scala
-  │     ├── chapter-01
-  │     │    ├── listings.scala
-  │     │
-  │     ├── chapter-02
-  │     ├── chapter-03
-  │     ├── ...
+  │    ├── ch02-listings.scala
+  │    ├── ch03-listings.scala
+  │    └── ...
   ├── java
   ├── python
   │
 other-listings
   ├── chapter-01
   ├── chapter-02
-  │     ├── log4j.properties
+  │    └── log4j.properties
   ├── chapter-03
-  │     ├── eclipse.ini
+  │    ├── eclipse.ini
+  │    └── ...
   ├── ...
 
 ```
 
 We tried to organize the listings so that you have minimum distractions while going through the book.  
-We hope you'll find the listings useful and that you'll have fun reading the book and going through examples.  
+We hope you'll find the content useful and that you'll have fun reading the book and going through examples.  
 
 As part of Manning's "in action" series, it's a hands-on, tutorial-style book.
 
-Thank you,  
-<table>
-  <tr>
-      <td>Marko Bonaći</td>
-  </tr>
-  <tr>
-      <td>Marko Bonaći</td>
-  </tr>
-</table>
+Thank you,
 
-Marko Bonaći    Petar Zečević
+
+
+<div style="display: inline-block">
+  <small>
+    Marko Bonaći  
+    [@markobonaci](http://twitter.com/markobonaci)
+  </small>
+</div>
+<div style="display: inline-block; margin-left: 30px">
+  <small>
+    Petar Zečević  
+    [@p_zecevic](http://twitter.com/p_zecevic)
+  </small>
+</div>
