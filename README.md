@@ -31,19 +31,5 @@ We hope you'll find the content useful and that you'll have fun reading the book
 
 As part of Manning's "in action" series, it's a hands-on, tutorial-style book.
 
-Thank you,
-
-
-
-<div style="display: inline-block">
-  <small>
-    Marko Bonaći  
-    [@markobonaci](http://twitter.com/markobonaci)
-  </small>
-</div>
-<div style="display: inline-block; margin-left: 30px">
-  <small>
-    Petar Zečević  
-    [@p_zecevic](http://twitter.com/p_zecevic)
-  </small>
-</div>
+Thank you  
+[Marko Bonaći](http://twitter.com/markobonaci) and [Petar Zečević](http://twitter.com/p_zecevic)
