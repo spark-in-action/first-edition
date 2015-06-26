@@ -2,7 +2,7 @@
 # Spark in Action book repository
 #### Current edition: Manning Early Access Program (MEAP)
 
-The MEAP publishing date is **2015.04.04.**
+The MEAP publishing date is **2015.04.04.**  
 Manning's book forum: [https://forums.manning.com/forums/spark-in-action](https://forums.manning.com/forums/spark-in-action)
 
 The repo contains book listings organized by chapter and programming language (if applicable):
@@ -37,10 +37,10 @@ ch03
 
 ```
 
-We tried to organize the listings so that you have minimum distractions while going through the book.
-We hope you'll find the content useful and that you'll have fun reading the book and going through examples.
+We tried to organize the listings so that you have minimum distractions while going through the book.  
+We hope you'll find the content useful and that you'll have fun reading the book and going through examples.  
 
-As part of Manning's "in action" series, it's a hands-on, tutorial-style book.
+As part of Manning's "in action" series, it's a hands-on, tutorial-style book.  
 
-Thank you
+Thank you,  
 [Marko Bonaći](http://twitter.com/markobonaci) and [Petar Zečević](http://twitter.com/p_zecevic)

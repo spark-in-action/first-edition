@@ -9,21 +9,21 @@ sudo apt-get -y install openjdk-7-jdk
 
 //### 2.2
 cd $HOME/Downloads
-tar -xvf spark-1.3.0-bin-hadoop2.4.tgz
+tar -xvf spark-1.3.1-bin-hadoop2.6.tgz
 
 echo $HOME
 
 cd $HOME
 mkdir –p bin/sparks
-mv Downloads/spark-1.3.0-bin-hadoop2.4 bin/sparks
+mv Downloads/spark-1.3.1-bin-hadoop2.6 bin/sparks
 
 cd $HOME/bin
-ln -s spark-1.3.0-bin-hadoop2.4 Spark
+ln -s spark-1.3.1-bin-hadoop2.6 Spark
 
 //# Example of how to replace symbolic link
 //# to point to a different version of Spark:
 //# rm Spark
-//# ln -s spark-1.2.1-bin-hadoop2.4 Spark
+//# ln -s spark-1.2.1-bin-hadoop2.6 Spark
 
 //### 2.3
 cd $HOME/bin/Spark
@@ -104,7 +104,7 @@ alsoReversed.top(4)
 //# def distinct(numPartitions: Int): RDD[T]
 
 /************************************ terminal:
-cd ~/Spark
+cd ~/bin/Spark
 echo "15,16,20,20,68,77,80,94,94,98
 16,31,31,48,55,55,71,77,85,85,90
 2,11,21,21,36,38,55,71,77,85,94
