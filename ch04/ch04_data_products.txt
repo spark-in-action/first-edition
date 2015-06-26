@@ -1,0 +1,100 @@
+1#ROBITUSSIN PEAK COLD NIGHTTIME COLD PLUS FLU#9721.89#10
+2#Mattel Little Mommy Doctor Doll#6060.78#6
+3#Cute baby doll, battery#1808.79#2
+4#Bear doll#51.06#6
+5#LEGO Legends of Chima#849.36#6
+6#LEGO Castle#4777.51#10
+7#LEGO Mixels#8720.91#1
+8#LEGO Star Wars#7592.44#4
+9#LEGO Lord of the Rings#851.67#2
+10#LEGO The Hobbit#7314.55#9
+11#LEGO Minecraft#5646.81#3
+12#LEGO Hero Factory#6911.2#1
+13#LEGO Architecture#604.58#5
+14#LEGO Technic#7423.48#3
+15#LEGO Storage & Accessories#3125.96#2
+16#LEGO Classic#9933.3#10
+17#LEGO Galaxy Squad#5593.16#4
+18#LEGO Mindstorms#6022.88#10
+19#LEGO Minifigures#5775.99#1
+20#LEGO Elves#4589.79#4
+21#LEGO Jurassic World#4330.68#7
+22#LEGO Speed Champion#8486.42#2
+23#LEGO Bionicle#6878.18#10
+24#LEGO Pirates#4150.34#2
+25#Barbie Shopping Mall Playset#437.5#9
+26#Barbie Beach Ken Doll#742.84#5
+27#Barbie Bedtime Princess Doll#6787.96#6
+28#Far Cry 4 Limited Edition for Xbox One#711.88#1
+29#Intel Core i3 3220#4691.13#7
+30#Procesor Intel Core i5 3470#4570.99#6
+31#Intel Core i5 3570#4114.86#10
+32#Intel Core i7 3770K#3132.7#8
+33#Intel Core i5 3330#9785.44#9
+34#GAM X360 Assassins Creed 3#6363.95#9
+35#GAM X360  Dead Space 3 Limited Edition#6660.97#5
+36#GAM X360 Hitman Absolution X360#8660.55#9
+37#GAM X360 Need for Speed Most Wanted 2012#6790.22#8
+38#Sony Playstation 3#5088.35#4
+39#Medal Of Honor Allied Assault War Chest PC#3465.69#9
+40#Might and Magic: Clash Of Heroes PC#5787.13#2
+41#Star Wars Republic Commando PC#8673.6#2
+42#Star Wars The Force Unleashed Ultimate Sith Edition PC#3533.42#10
+43#Tomb Raider PC#2718.14#1
+44#SAMSUNG LED TV 39F5500, Full HD, USB#2531.15#1
+45#SAMSUNG LED TV 42F5300, Full HD, USB#6225.99#5
+46#SAMSUNG LED TV 32F4510, HD ready, USB#8508.89#1
+47#SAMSUNG LED TV 55F6500, Full HD, 3D, USB#7673.37#9
+48#LG LED TV 42LA6130#6918.75#8
+49#LG LED TV 32LN5400#7927.19#8
+50#LG LED TV 32LN575S#8379.93#6
+51#Essentials Tekken 6 PS3#8875.2#7
+52#Essentials Crash Tag Team Racing PSP#4037.85#10
+53#Essentials Dantes Inferno PSP#6610.78#6
+54#Essentials Medal of Honor: Heroes 2 PSP#4982.5#5
+55#Notebook Lenovo E545 20B2000KSC#6369.46#6
+56#Notebook Lenovo Yoga Think, 20CD0001SC#2509.1#5
+57#Notebook Lenovo U430p, 59-390459#2626.88#2
+58#Notebook Lenovo U330p, 59-390439#461.08#3
+59#PC HP 600PD TWR, E7P49AW#6326.7#1
+60#PC HP 490PD MT, D5T62EA#2709.54#6
+61#PC HP 490PD MT, D5T68EA#3906.32#4
+62#PC HP 490PD MT, D5T60EA#6248.36#3
+63#Pajamas#8131.85#3
+64#Disposable diapers#3003.77#4
+65#Roller Derby Roller Street Series Skateboard Bruiser#7783.79#5
+66#Stomach Disorders#5638.98#1
+67#Grippe#1368.53#8
+68#Niacin#6295.48#1
+69#ibuprofen#7907.21#4
+70#Toothbrush#5.1#1
+71#Childrens Non-Drowsy#7843.59#2
+72#Obao#8693.64#8
+73#Phentermine Hydrochloride#5919.78#5
+74#CVS#7443.91#9
+75#Levalbuterol Hydrochloride#866.69#7
+76#Caldyphen Clear#4171.55#1
+77#Treatment Set TS332287#4101.3#2
+78#GUNA-EGF#5326.35#5
+79#Alphanate#4218.17#4
+80#CUPRUM METALLICUM#4334.82#2
+81#Dictionary#29.65#4
+82#Scrub Care Povidone Iodine Cleansing Scrub#3117.79#3
+83#Ativan#9511.99#9
+84#Cyanocobalamin#2044.61#8
+85#Brimonidine Tartrate#3551.83#3
+86#Jantoven#3255.4#9
+87#Acyclovir#6252.58#4
+88#healthy accents sinus#5247.51#4
+89#Glipizide#9376.44#5
+90#AMBROSIA TRIFIDA POLLEN#5887.49#1
+91#Lisinopril#5834.85#6
+92#Minoxidil#3209.34#4
+93#Jafra#3715.07#4
+94#ATOPALM MUSCLE AND JOINT#1544.25#7
+95#Cosopt#8255.65#9
+96#chest congestion#1305.04#1
+97#Santalia Clinical Intenstive Spot Treatment#8835.52#1
+98#Gabapentin#8763.57#5
+99#Bronchitis#2589.29#2
+100#ZOCOR#7040.56#8
