@@ -3,7 +3,7 @@
 import org.apache.spark.rdd.RDD
 import org.apache.spark.mllib.linalg.{Vectors,Vector}
 import org.apache.spark.mllib.linalg.{DenseVector, SparseVector}
-import org.apache.spark.mllib.linalg.{DenseMatrix, SparseMatrix, Matrix}
+import org.apache.spark.mllib.linalg.{DenseMatrix, SparseMatrix, Matrix, Matrices}
 import breeze.linalg.{DenseVector => BDV,SparseVector => BSV,Vector => BV}
 import breeze.linalg.{DenseMatrix => BDM,CSCMatrix => BSM,Matrix => BM}
 import org.apache.spark.mllib.linalg.distributed.{RowMatrix, CoordinateMatrix, BlockMatrix, DistributedMatrix, MatrixEntry}
@@ -75,13 +75,14 @@ def toBreezeD(dm:DistributedMatrix):BM[Double] = dm match {
 }
 
 val dm:Matrix = Matrices.dense(2,3,Array(5.,0.,0.,3.,1.,4.))
-val sm:Matrix = [CA]Matrices.sparse(2,3,Array(0,1,2,4),Array(0,1,0,1),Array(5.,3.,1.,4.))
+val sm:Matrix = Matrices.sparse(2,3,Array(0,1,2,4),Array(0,1,0,1),Array(5.,3.,1.,4.))
 sm.asInstanceOf[SparseMatrix].toDense
 dm.asInstanceOf[DenseMatrix].toSparse
 dm(1,1)
 dm.transpose
 
 //Section 7.2.2
+//Illustration only. Not to be executed in the shell (rm is not defined):
 val rmind = new IndexedRowMatrix(rm.rows.zipWithIndex().map(x => IndexedRow(x._2, x._1)))
 
 //Section 7.4
