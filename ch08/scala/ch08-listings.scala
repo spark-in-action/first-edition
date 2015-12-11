@@ -62,7 +62,8 @@ dfraw.show()
 
 dfraw.groupBy(dfraw("workclass")).count().foreach(println)
 //Missing data imputation
-val dfrawrpl = dfraw.na.replace(Array("workclass", "occupation"), Map("?" -> "Private"))
+val dfrawrp = dfraw.na.replace(Array("workclass"), Map("?" -> "Private"))
+val dfrawrpl = dfrawrp.na.replace(Array("occupation"), Map("?" -> "Prof-specialty"))
 val dfrawnona = dfrawrpl.na.replace(Array("native_country"), Map("?" -> "United-States"))
 
 //converting strings to numeric values
