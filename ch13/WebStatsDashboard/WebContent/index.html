@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Web Statistics Dashboard</title>
+	<style>	
+		.axis path,
+		.axis line {
+		  fill: none;
+		  stroke: #000;
+		}
+		
+		.line {
+		  fill: none;
+		  stroke: steelblue;
+		  stroke-width: 1.5px;
+		}
+		
+		td {
+			padding: 5px !important;
+			margin: 5px !important;
+		}
+	
+	</style>
+	<link href="css/bootstrap.min.css" rel="stylesheet">
+	<!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+      <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+	<script src="js/d3.js"></script>
+	<!-- script src="http://underscorejs.org/underscore-min.js"></script -->
+</head>
+<body>
+	<table>
+	<tr>
+		<td>
+			<table>
+			<tr>
+				<td>
+					<button id="runningbtn" type="button" class="btn btn-danger active">
+					    <span class="glyphicon glyphicon-off"></span>&nbsp;<span id="tsp">Stop</span>
+					</button>
+				</td>
+				<td style="width:150px; text-align:right">
+					<b>Time range: </b>
+				</td>
+				<td style="width:900px">			
+					<div class="btn-group" data-toggle="buttons" style="width:550px">
+						<label class="btn btn-primary active">
+							<input type="radio" id="tr2" autocomplete="off" checked>2 minutes
+						</label>
+						<label class="btn btn-primary">
+							<input type="radio" id="tr5" autocomplete="off">5 minutes
+						</label>
+						<label class="btn btn-primary">
+							<input type="radio" id="tr15" autocomplete="off">15 minutes
+						</label>
+						<label class="btn btn-primary">
+							<input type="radio" id="tr30" autocomplete="off">30 minutes
+						</label>
+						<label class="btn btn-primary">
+							<input type="radio" id="tr60" autocomplete="off">60 minutes
+						</label>
+					</div>
+				</td>
+			</tr>
+			<tr>
+				<td colspan="3" style="width:1000px">
+					<div id="usergraph"/>
+				</td>
+				<td style="width:600px"/>
+			</tr>
+			<tr><td colspan="3" style="width:1000px">
+					<div id="reqgraph"/>
+				</td>
+			</tr>
+			</table>
+		</td>
+		<td style="width:600px">
+			<b>Last 100 messages: </b><br>
+			<textarea rows="30" cols="60" name="messages" id="messages" readonly></textarea>
+		</td>
+	</tr>
+	</table>
+	<script src="js/jquery.min.js"></script>
+	<script src="js/bootstrap.min.js"></script>
+	<script src="js/webstats.js"></script>
+	<script>
+		$('.btn-primary').on('click', function() {
+			setRange(parseInt($(this).find('input').attr('id').substring(2)));
+		});
+		$('#runningbtn').on('click', function() {
+			toggleRunning();
+		});
+	</script>
+</body>
+</html>
