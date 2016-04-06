@@ -25,9 +25,9 @@ import org.apache.log4j.Logger
 import org.apache.log4j.Level
 
 //Section 7.2.1
-val dv1:Vector = Vectors.dense(5.,6.,7.,8.)
-val dv2:Vector = Vectors.dense(Array(5.,6.,7.,8.))
-val sv:Vector = Vectors.sparse(4, Array(0,1,2,3), Array(5.,6.,7.,8.))
+val dv1:Vector = Vectors.dense(5.0,6.0,7.0,8.0)
+val dv2:Vector = Vectors.dense(Array(5.0,6.0,7.0,8.0))
+val sv:Vector = Vectors.sparse(4, Array(0,1,2,3), Array(5.0,6.0,7.0,8.0))
 dv2(2)
 dv1.size
 dv2.toArray
@@ -74,8 +74,11 @@ def toBreezeD(dm:DistributedMatrix):BM[Double] = dm match {
     }
 }
 
-val dm:Matrix = Matrices.dense(2,3,Array(5.,0.,0.,3.,1.,4.))
-val sm:Matrix = Matrices.sparse(2,3,Array(0,1,2,4),Array(0,1,0,1),Array(5.,3.,1.,4.))
+toBreezeV(dv1) + toBreezeV(dv2)
+toBreezeV(dv1).dot(toBreezeV(dv2))
+
+val dm:Matrix = Matrices.dense(2,3,Array(5.0,0.0,0.0,3.0,1.0,4.0))
+val sm:Matrix = [CA]Matrices.sparse(2,3,Array(0,1,2,4),Array(0,1,0,1),Array(5.0,3.0,1.0,4.0))
 sm.asInstanceOf[SparseMatrix].toDense
 dm.asInstanceOf[DenseMatrix].toSparse
 dm(1,1)
@@ -180,7 +183,7 @@ testMetrics.rootMeanSquaredError
 testMetrics.meanSquaredError
 
 //Section 7.5.3
-println(model.weights.toArray.map(x => x*x).zipWithIndex.sortBy(_._1).mkString(", "))
+println(model.weights.toArray.map(x => x.abs).zipWithIndex.sortBy(_._1).mkString(", "))
 
 //Section 7.5.4
 model.save(sc, "hdfs:///path/to/saved/model")
