@@ -1,32 +1,28 @@
 //################ Listings from chapter 02 ################\\
-//### 2.1
 
 /************************************ terminal
-which javac
 
-sudo apt-get update
-sudo apt-get -y install openjdk-7-jdk
+//section 2.1.1
+wget <URL>
+tar -xvf spark-<version>-bin-hadoop<version>.tgz
 
-//### 2.2
-cd $HOME/Downloads
-tar -xvf spark-1.3.1-bin-hadoop2.6.tgz
+//section 2.1.2
+mkdir –p $HOME/bin/sparks
+mv spark-<version>-bin-hadoop<version> bin/sparks
 
-echo $HOME
-
-cd $HOME
-mkdir –p bin/sparks
-mv Downloads/spark-1.3.1-bin-hadoop2.6 bin/sparks
+ls $HOME/bin/sparks
 
 cd $HOME/bin
-ln -s spark-1.3.1-bin-hadoop2.6 Spark
+ln -s spark-<version>-bin-hadoop<version> spark
+ls -la $HOME/bin
 
 //# Example of how to replace symbolic link
 //# to point to a different version of Spark:
-//# rm Spark
-//# ln -s spark-1.2.1-bin-hadoop2.6 Spark
+//# rm spark
+//# ln -s spark-<version>-bin-hadoop<version> spark
 
-//### 2.3
-cd $HOME/bin/Spark
+//section 2.2.1
+cd $HOME/bin/spark
 ./bin/spark-shell
 
 gedit conf/log4j.properties
@@ -65,7 +61,7 @@ end log4j.properties ********************************/
 end terminal ************************************/
 
 
-//### 2.3.1
+//### 2.2.2
 val licLines = sc.textFile("LICENSE")
 val lineCnt = licLines.count
 
@@ -74,17 +70,13 @@ bsdLines.count
 
 bsdLines.foreach(bLine => println(bLine))
 
-//### 2.5.1
-val nums = sc.parallelize(1 to 10)
-val numsEven = nums.filter(num => num % 2 == 0)
-numsEven.foreach(x => println(x))
+def isBSD(line: String) = { line.contains("BSD") }
+val isBSD = (line: String) => line.contains("BSD")
+val bsdLines1 = licLines.filter(isBSD)
+bsdLines1.count
+bsdLines.foreach(bLine => println(bLine))
 
-def isEven(num: Int) = { num % 2 == 0 }
-val isEvenInVal = (num: Int) => num % 2 == 0
-val numsEven1 = nums.filter(isEvenInVal)
-numsEven1.count
-
-//### 2.5.2
+//### 2.3.1
 //# def map[U](f: (T) => U): RDD[U]
 
 val numbers = sc.parallelize(10 to 50 by 10)
@@ -99,19 +91,14 @@ val alsoReversed = numbersSquared.map(_.toString.reverse)
 alsoReversed.first
 alsoReversed.top(4)
 
-//### 2.5.3
-//# def distinct(): RDD[T]
-//# def distinct(numPartitions: Int): RDD[T]
+//### 2.3.2
 
 /************************************ terminal:
-cd ~/bin/Spark
-echo "15,16,20,20,68,77,80,94,94,98
-16,31,31,48,55,55,71,77,85,85,90
-2,11,21,21,36,38,55,71,77,85,94
-8,12,20,20,20,31,50,68
-4,8,9,10,20,21,21,36,42,61,94,98,98,98
-28,31,46,48,71,71,71,77,77,90,98
-16,21,21,21,61,68,71,77,80,94" > client-ids.log
+cd ~/bin/spark
+echo "15,16,20,20
+77,80,94
+94,98,16,31
+31,15,20" > client-ids.log
 end terminal ********************************/
 
 val lines = sc.textFile("client-ids.log")
@@ -136,23 +123,32 @@ ids.collect.mkString("; ")
 val intIds = ids.map(_.toInt)
 intIds.collect
 
+//# def distinct(): RDD[T]
+
 val uniqueIds = intIds.distinct
 uniqueIds.collect
-val countForGrumpy = uniqueIds.count
+val finalCount  = uniqueIds.count
 
 val transactionCount = ids.count
 
-//### 2.5.4
+//Pasting blocks of code
+scala> val lines = sc.textFile("client-ids.log")
+lines: org.apache.spark.rdd.RDD[String] = client-ids.log MapPartitionsRDD[12] at textFile at <console>:21
+scala> val ids = lines.flatMap(_.split(","))
+ids: org.apache.spark.rdd.RDD[String] = MapPartitionsRDD[13] at flatMap at <console>:23
+scala> ids.count
+res8: Long = 14
+scala> val uniqueIds = ids.distinct
+uniqueIds: org.apache.spark.rdd.RDD[String] = MapPartitionsRDD[16] at distinct at <console>:25
+scala> uniqueIds.count
+res17: Long = 8
+scala> uniqueIds.collect
+res18: Array[String] = Array(16, 80, 98, 20, 94, 15, 77, 31)
+
+//### 2.3.3
 //# def sample(withReplacement: Boolean, fraction: Double, seed: Long = Utils.random.nextLong): RDD[T]
 
-val lines = sc.textFile("client-ids.log")
-val ids = lines.flatMap(_.split(","))
-ids.count
-val uniqueIds = ids.distinct
-uniqueIds.count
-uniqueIds.collect
-
-val s = uniqueIds.sample(false, 0.07)
+val s = uniqueIds.sample(false, 0.3)
 s.count
 s.collect
 
@@ -163,7 +159,41 @@ swr.collect
 //# def takeSample(withReplacement: Boolean, num: Int, seed: Long = Utils.random.nextLong): Array[T]
 
 val taken = uniqueIds.takeSample(false, 5)
-swr.take(6)
-swr.min
-swr.max
+swr.take(3)
+
+//### 2.4
+
+//Implicit conversion:
+class ClassOne[T](val input: T) { }
+class ClassOneStr(val one: ClassOne[String]) {
+    def duplicatedString() = one.input + one.input
+}
+class ClassOneInt(val one: ClassOne[Int]) {
+    def duplicatedInt() = one.input.toString + one.input.toString
+}
+implicit def toStrMethods(one: ClassOne[String]) = new ClassOneStr(one)
+implicit def toIntMethods(one: ClassOne[Int]) = new ClassOneInt(one)
+
+scala> val oneStrTest = new ClassOne("test")
+oneStrTest: ClassOne[String] = ClassOne@516a4aef
+scala> val oneIntTest = new ClassOne(123)
+oneIntTest: ClassOne[Int] = ClassOne@f8caa36
+scala> oneStrTest.duplicatedString()
+res0: String = testtest
+scala> oneIntTest.duplicatedInt()
+res1: 123123
+
+//### 2.4.1
+intIds.mean
+intIds.sum
+
+intIds.variance
+intIds.stdev
+
+//### 2.4.2
+intIds.histogram(Array(1.0, 50.0, 100.0))
+rdd.histogram(3)
+
+//# def sumApprox(timeout: Long, confidence: Double = 0.95): [CA]PartialResult[BoundedDouble]
+//# def meanApprox(timeout: Long, confidence: Double = 0.95): [CA]PartialResult[BoundedDouble]
 
