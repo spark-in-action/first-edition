@@ -147,6 +147,7 @@ public class LogSimulator extends Thread
 	
 	public void run()
 	{
+		try {
 		if(!silent)
 			System.out.println("Starting user simulator with parameters: IP="+ipAddress+", sessionId="+sessionId+", timeToRun="+timeToRun);
 		
@@ -206,6 +207,11 @@ public class LogSimulator extends Thread
         	System.out.println("Stopping user simulator with sessionId "+sessionId);
         
         threadCountMonitor.decrementAndGet();
+		}
+		catch(Exception e)
+		{
+			e.printStackTrace();
+		}
 	}
 	
 	/**

@@ -131,7 +131,7 @@ object StreamingLogAnalyzer
     //CALCULATE ERRORS PER SECOND
     val errorsPerSecond = logLinesPerSecond.
       //leaves in only the LogLines with response code starting with 4 or 5
-      filter(l => { val respCode = l._2.respCode.toString(); respCode.startsWith("4") || respCode.startsWith("5") }).
+      filter(l => { val respCode = l._2.respCode / 100; respCode == 4 || respCode == 5 }).
       //this combineByKey counts all LogLines per unique second
       combineByKey(r => 1L,
           (c: Long, r: LogLine) => c + 1,
@@ -170,7 +170,7 @@ object StreamingLogAnalyzer
     //maps each count to a tuple (timestamp, a Map containing the count under the ERR_PER_SEC key)
     val errors = errorsPerSecond.map(sc => (sc._1, Map(ERR_PER_SEC -> sc._2)))
     //maps each count to a tuple (timestamp, a Map containing the count per category under the key ADS_PER_SEC#<ad category>)
-    val ads = adsPerSecondAndType.map(stc => (stc._1._1, Map(ADS_PER_SEC + "#" + stc._1._2.toString -> stc._2)))
+    val ads = adsPerSecondAndType.map(stc => (stc._1._1, Map(s"$ADS_PER_SEC#${stc._1._2}" -> stc._2)))
 
     //all the streams are unioned and combined
     val finalStats = finalSessionCount.union(requests).union(errors).union(ads).

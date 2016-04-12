@@ -286,4 +286,3 @@ var toggleRunning = function() {
 		start();
 	}
 };//toggleRunning
-
