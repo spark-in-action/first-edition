@@ -19,25 +19,25 @@ oneIntTest.duplicatedString()
 //section 4.1.2
 val tranFile = sc.textFile("path/to/ch04_data_transactions.txt")
 val tranData = tranFile.map(_.split("#"))
-var transByCust = tranData.map(t => (t(2).toInt, t))
+var transByCust = tranData.map(tran => (tran(2).toInt, tran))
 
 transByCust.keys.distinct().count()
 
 transByCust.countByKey()
-transByCust.countByKey().map(_._2).sum
+transByCust.countByKey().values.sum
 val (cid, purch) = transByCust.countByKey().toSeq.sortBy(_._2).last
 var complTrans = Array(Array("2015-03-30", "11:59 PM", "53", "4", "1", "0.00"))
 
 transByCust.lookup(53)
-transByCust.lookup(53).foreach(t => println(t.mkString(", ")))
+transByCust.lookup(53).foreach(tran => println(tran.mkString(", ")))
 
-transByCust = transByCust.mapValues(t => {
-     if(t(3).toInt == 25 && t(4).toDouble > 1)
-         t(5) = (t(5).toDouble * 0.95).toString
-     t })
+transByCust = transByCust.mapValues(tran => {
+     if(tran(3).toInt == 25 && tran(4).toDouble > 1)
+         tran(5) = (tran(5).toDouble * 0.95).toString
+     tran })
 
 transByCust = transByCust.flatMapValues(tran => {
-    if(tran(3).toInt == 81 && tran(4).toInt > 4) {
+    if(tran(3).toInt == 81 && tran(4).toInt >= 5) {
        val cloned = tran.clone()
        cloned(5) = "0.00"; cloned(3) = "70"; cloned(4) = "1";
        List(tran, cloned)
@@ -74,7 +74,7 @@ rdd.collect()
 rdd.count()
 
 //section 4.3.1
-val transByProd = transByCust.map(ct => (ct._2(3).toInt, ct._2))
+val transByProd = tranData.map(tran => (tran(3).toInt, tran))
 val totalsByProd = transByProd.mapValues(t => t(5).toDouble).
    reduceByKey{case(tot1, tot2) => tot1 + tot2}
 
@@ -84,13 +84,13 @@ val products = sc.textFile("/pathto/ch04_data_products.txt").
 val totalsAndProds = totalsByProd.join(products)
 totalsAndProds.first()
 
-val totalsWithMissingProds = products.leftOuterJoin(totalsByProd)
+val totalsWithMissingProds = totalsByProd.rightOuterJoin(products)
 val missingProds = totalsWithMissingProds.filter(x => x._2._1 == None).map(x => x._2._2)
 missingProds.foreach(p => println(p.mkString(", ")))
 
 
-val missingProds = products.subtractByKey(totalsByProd)
-missingProds.foreach(p => println(p._2.mkString(", ")))
+val missingProds = products.subtractByKey(totalsByProd).values
+missingProds.foreach(p => println(p.mkString(", ")))
 
 val prodTotCogroup = totalsByProd.cogroup(products)
 prodTotCogroup.filter(x => x._2._1.isEmpty).
@@ -169,6 +169,7 @@ acc.value
 list.foreach(x => acc.value)
 
 val rdd = sc.parallelize(1 to 100)
+import org.apache.spark.AccumulableParam
 implicit object AvgAccParam extends AccumulableParam[(Int, Int), Int] {
   def zero(v:(Int, Int)) = (0, 0)
   def addInPlace(v1:(Int, Int), v2:(Int, Int)) = (v1._1+v2._1, v1._2+v2._2)
