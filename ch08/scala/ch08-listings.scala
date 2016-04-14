@@ -99,7 +99,7 @@ val lpoints = va.transform(dfhot).select("features", "income").withColumnRenamed
 //section 8.2.3
 val splits = lpoints.randomSplit(Array(0.8, 0.2))
 val adulttrain = splits(0).cache()
-val adulttest = splits(1).cache()
+val adultvalid = splits(1).cache()
 
 
 val lr = new LogisticRegression
@@ -111,15 +111,15 @@ lrmodel.weights
 lrmodel.intercept
 
 //section 8.2.3
-val testpredicts = lrmodel.transform(adulttest)
+val validpredicts = lrmodel.transform(adultvalid)
 val bceval = new BinaryClassificationEvaluator()
-bceval.evaluate(testpredicts)
+bceval.evaluate(validpredicts)
 bceval.getMetricName
 
 bceval.setMetricName("areaUnderPR")
-bceval.evaluate(testpredicts)
+bceval.evaluate(validpredicts)
 
-def computePRCurve(train:DataFrame, test:DataFrame, lrmodel:LogisticRegressionModel) =
+def computePRCurve(train:DataFrame, valid:DataFrame, lrmodel:LogisticRegressionModel) =
 {
     for(threshold <- 0 to 10)
     {
@@ -127,14 +127,14 @@ def computePRCurve(train:DataFrame, test:DataFrame, lrmodel:LogisticRegressionMo
         if(threshold == 10)
             thr -= 0.001
         lrmodel.setThreshold(thr)
-        val testpredicts = lrmodel.transform(test)
-        val testPredRdd = testpredicts.map(row => (row.getDouble(4), row.getDouble(1)))
-        val bcm = new BinaryClassificationMetrics(testPredRdd)
+        val validpredicts = lrmodel.transform(valid)
+        val validPredRdd = validpredicts.map(row => (row.getDouble(4), row.getDouble(1)))
+        val bcm = new BinaryClassificationMetrics(validPredRdd)
         val pr = bcm.pr.collect()(1)
         println("%.1f: R=%f, P=%f".format(thr, pr._1, pr._2))
     }
 }
-computePRCurve(adulttrain, adulttest, lrmodel)
+computePRCurve(adulttrain, adultvalid, lrmodel)
 // 0.0: R=1.000000, P=0.238081
 // 0.1: R=0.963706, P=0.437827
 // 0.2: R=0.891973, P=0.519135
@@ -146,7 +146,7 @@ computePRCurve(adulttrain, adulttest, lrmodel)
 // 0.8: R=0.202818, P=0.920543
 // 0.9: R=0.084543, P=0.965854
 // 1.0: R=0.019214, P=1.000000
-def computeROCCurve(train:DataFrame, test:DataFrame, lrmodel:LogisticRegressionModel) =
+def computeROCCurve(train:DataFrame, valid:DataFrame, lrmodel:LogisticRegressionModel) =
 {
     for(threshold <- 0 to 10)
     {
@@ -154,25 +154,25 @@ def computeROCCurve(train:DataFrame, test:DataFrame, lrmodel:LogisticRegressionM
         if(threshold == 10)
             thr -= 0.001
         lrmodel.setThreshold(thr)
-        val testpredicts = lrmodel.transform(test)
-        val testPredRdd = testpredicts.map(row => (row.getDouble(4), row.getDouble(1)))
-        val bcm = new BinaryClassificationMetrics(testPredRdd)
+        val validpredicts = lrmodel.transform(valid)
+        val validPredRdd = validpredicts.map(row => (row.getDouble(4), row.getDouble(1)))
+        val bcm = new BinaryClassificationMetrics(validPredRdd)
         val pr = bcm.roc.collect()(1)
         println("%.1f: FPR=%f, TPR=%f".format(thr, pr._1, pr._2))
     }
 }
-computeROCCurve(adulttrain, adulttest, lrmodel)
-// 0.0: FPR=1.000000, TPR=1.000000
-// 0.1: FPR=0.386658, TPR=0.963706
-// 0.2: FPR=0.258172, TPR=0.891973
-// 0.3: FPR=0.170781, TPR=0.794620
-// 0.4: FPR=0.101668, TPR=0.694278
-// 0.5: FPR=0.062842, TPR=0.578992
-// 0.6: FPR=0.034023, TPR=0.457728
-// 0.7: FPR=0.017879, TPR=0.324936
-// 0.8: FPR=0.005470, TPR=0.202818
-// 0.9: FPR=0.000934, TPR=0.084543
-// 1.0: FPR=0.000000, TPR=0.019214
+computeROCCurve(adulttrain, adultvalid, lrmodel)
+// 0,0: R=1,000000, P=0,237891
+// 0,1: R=0,953708, P=0,430118
+// 0,2: R=0,891556, P=0,515234
+// 0,3: R=0,794256, P=0,586950
+// 0,4: R=0,672525, P=0,668228
+// 0,5: R=0,579511, P=0,735983
+// 0,6: R=0,451350, P=0,783482
+// 0,7: R=0,330047, P=0,861298
+// 0,8: R=0,205315, P=0,926499
+// 0,9: R=0,105444, P=0,972332
+// 1,0: R=0,027004, P=1,000000
 
 //section 8.2.5
 val cv = new CrossValidator().setEstimator(lr).setEvaluator(bceval).setNumFolds(5)
@@ -182,7 +182,7 @@ cv.setEstimatorParamMaps(paramGrid)
 val cvmodel = cv.fit(adulttrain)
 cvmodel.bestModel.asInstanceOf[LogisticRegressionModel].weights
 cvmodel.bestModel.parent.asInstanceOf[LogisticRegression].getRegParam
-new BinaryClassificationEvaluator().evaluate(cvmodel.bestModel.transform(adulttest))
+new BinaryClassificationEvaluator().evaluate(cvmodel.bestModel.transform(adultvalid))
 
 //section 8.2.6
 val penschema = StructType(Array(
@@ -214,7 +214,7 @@ val penlpoints = va.transform(dfpen).select("features", "label")
 
 val pensets = penlpoints.randomSplit(Array(0.8, 0.2))
 val pentrain = pensets(0).cache()
-val pentest = pensets(1).cache()
+val penvalid = pensets(1).cache()
 
 val penlr = new LogisticRegression().setRegParam(0.01)
 val ovrest = new OneVsRest()
@@ -222,7 +222,7 @@ ovrest.setClassifier(penlr)
 
 val ovrestmodel = ovrest.fit(pentrain)
 
-val penresult = ovrestmodel.transform(pentest)
+val penresult = ovrestmodel.transform(penvalid)
 val penPreds = penresult.select("prediction", "label").map(row => (row.getDouble(0), row.getDouble(1)))
 val penmm = new MulticlassMetrics(penPreds)
 penmm.precision
@@ -253,7 +253,7 @@ val pendtlpoints = dtsm.transform(penlpoints).drop("label").withColumnRenamed("l
 
 val pendtsets = pendtlpoints.randomSplit(Array(0.8, 0.2))
 val pendttrain = pendtsets(0).cache()
-val pendttest = pendtsets(1).cache()
+val pendtvalid = pendtsets(1).cache()
 
 val dt = new DecisionTreeClassifier()
 dt.setMaxDepth(20)
@@ -267,7 +267,7 @@ dtmodel.rootNode.asInstanceOf[InternalNode].split.asInstanceOf[ContinuousSplit].
 dtmodel.rootNode.asInstanceOf[InternalNode].leftChild
 dtmodel.rootNode.asInstanceOf[InternalNode].rightChild
 
-val dtpredicts = dtmodel.transform(pendttest)
+val dtpredicts = dtmodel.transform(pendtvalid)
 val dtresrdd = dtpredicts.select("prediction", "label").map(row => (row.getDouble(0), row.getDouble(1)))
 val dtmm = new MulticlassMetrics(dtresrdd)
 dtmm.precision
@@ -289,7 +289,7 @@ val rf = new RandomForestClassifier()
 rf.setMaxDepth(20)
 val rfmodel = rf.fit(pendttrain)
 rfmodel.trees
-val rfpredicts = rfmodel.transform(pendttest)
+val rfpredicts = rfmodel.transform(pendtvalid)
 val rfresrdd = rfpredicts.select("prediction", "label").map(row => (row.getDouble(0), row.getDouble(1)))
 val rfmm = new MulticlassMetrics(rfresrdd)
 rfmm.precision
@@ -403,21 +403,4 @@ printContingency(kmpredicts, 0 to 9)
 // ----------+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----
 // Purity: 0.6672125181950509
 // Predicted->original label map: Map(8.0 -> 8.0, 2.0 -> 6.0, 5.0 -> 0.0, 4.0 -> 1.0, 7.0 -> 5.0, 9.0 -> 9.0, 3.0 -> 4.0, 6.0 -> 3.0, 0.0 -> 2.0)
-
-
-
-
-
-def findK(rdd:RDD[Vector], ks:Seq[Int])
-{
-    for(k <- ks)
-    {
-        val model = KMeans.train(rdd, k, 500, 10)
-        println("K=%d: %f".format(k, model.computeCost(rdd)))
-    }
-}
-findK(pentrainrdd, pentestrdd, 2 to 20)
-
-
-
 
