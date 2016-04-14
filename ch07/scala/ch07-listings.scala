@@ -1,30 +1,7 @@
 
 
-import org.apache.spark.rdd.RDD
-import org.apache.spark.mllib.linalg.{Vectors,Vector}
-import org.apache.spark.mllib.linalg.{DenseVector, SparseVector}
-import org.apache.spark.mllib.linalg.{DenseMatrix, SparseMatrix, Matrix, Matrices}
-import breeze.linalg.{DenseVector => BDV,SparseVector => BSV,Vector => BV}
-import breeze.linalg.{DenseMatrix => BDM,CSCMatrix => BSM,Matrix => BM}
-import org.apache.spark.mllib.linalg.distributed.{RowMatrix, CoordinateMatrix, BlockMatrix, DistributedMatrix, MatrixEntry}
-import org.apache.spark.mllib.linalg.distributed.IndexedRowMatrix
-import org.apache.spark.mllib.linalg.distributed.IndexedRow
-import org.apache.spark.mllib.stat.Statistics
-import org.apache.spark.mllib.regression.LabeledPoint
-import org.apache.spark.mllib.feature.StandardScaler
-import org.apache.spark.mllib.regression.LinearRegressionWithSGD
-import org.apache.spark.mllib.evaluation.RegressionMetrics
-import org.apache.spark.mllib.regression.RidgeRegressionWithSGD
-import org.apache.spark.mllib.regression.LassoWithSGD
-import org.apache.spark.mllib.optimization.LBFGS
-import org.apache.spark.mllib.optimization.LeastSquaresGradient
-import org.apache.spark.mllib.optimization.SquaredL2Updater
-import org.apache.spark.mllib.regression.LinearRegressionModel
-import org.apache.spark.mllib.util.MLUtils
-import org.apache.log4j.Logger
-import org.apache.log4j.Level
-
 //Section 7.2.1
+import org.apache.spark.mllib.linalg.{Vectors,Vector}
 val dv1:Vector = Vectors.dense(5.0,6.0,7.0,8.0)
 val dv2:Vector = Vectors.dense(Array(5.0,6.0,7.0,8.0))
 val sv:Vector = Vectors.sparse(4, Array(0,1,2,3), Array(5.0,6.0,7.0,8.0))
@@ -33,17 +10,21 @@ dv1.size
 dv2.toArray
 
 //UTILITY METHODS FOR CONVERTING SPARK VECTORS AND MATRICES TO BREEZE
-
+import org.apache.spark.mllib.linalg.{DenseVector, SparseVector}
+import breeze.linalg.{DenseVector => BDV,SparseVector => BSV,Vector => BV}
 def toBreezeV(v:Vector):BV[Double] = v match {
     case dv:DenseVector => new BDV(dv.values)
     case sv:SparseVector => new BSV(sv.indices, sv.values, sv.size)
 }
 
+import org.apache.spark.mllib.linalg.{DenseMatrix, SparseMatrix, Matrix, Matrices}
+import breeze.linalg.{DenseMatrix => BDM,CSCMatrix => BSM,Matrix => BM}
 def toBreezeM(m:Matrix):BM[Double] = m match {
     case dm:DenseMatrix => new BDM(dm.numRows, dm.numCols, dm.values)
     case sm:SparseMatrix => new BSM(sm.values, sm.numCols, sm.numRows, sm.colPtrs, sm.rowIndices)
 }
 
+import org.apache.spark.mllib.linalg.distributed.{RowMatrix, CoordinateMatrix, BlockMatrix, DistributedMatrix, MatrixEntry}
 def toBreezeD(dm:DistributedMatrix):BM[Double] = dm match {
     case rm:RowMatrix => {
       val m = rm.numRows().toInt
@@ -85,7 +66,8 @@ dm(1,1)
 dm.transpose
 
 //Section 7.2.2
-//Illustration only. Not to be executed in the shell (rm is not defined):
+import org.apache.spark.mllib.linalg.distributed.IndexedRowMatrix
+import org.apache.spark.mllib.linalg.distributed.IndexedRow
 val rmind = new IndexedRowMatrix(rm.rows.zipWithIndex().map(x => IndexedRow(x._2, x._1)))
 
 //Section 7.4
@@ -148,6 +130,7 @@ printMat(toBreezeM(housingCovar))
 */
 
 //Section 7.4.4
+import org.apache.spark.mllib.regression.LabeledPoint
 val housingData = housingVals.map(x => { val a = x.toArray; LabeledPoint(a(a.length-1), Vectors.dense(a.slice(0, a.length-1))) })
 
 //Section 7.4.5
@@ -156,15 +139,13 @@ val housingTrain = sets(0)
 val housingTest = sets(1)
 
 //Section 7.4.6
+import org.apache.spark.mllib.feature.StandardScaler
 val scaler = new StandardScaler(true, true).fit(housingTrain.map(x => x.features))
 val trainScaled = housingTrain.map(x => LabeledPoint(x.label, scaler.transform(x.features)))
 val testScaled = housingTest.map(x => LabeledPoint(x.label, scaler.transform(x.features)))
 
-//alternatively load the data we worked with
-val trainScaled:RDD[LabeledPoint] = sc.objectFile("file:///path/to/trainScaled", 4)
-val testScaled:RDD[LabeledPoint] = sc.objectFile("file:///path/to/testScaled", 4)
-
 //Section 7.5
+import org.apache.spark.mllib.regression.LinearRegressionWithSGD
 val alg = new LinearRegressionWithSGD()
 alg.setIntercept(true)
 alg.optimizer.setNumIterations(200)
@@ -178,6 +159,7 @@ testPredicts.collect()
 val RMSE = math.sqrt(testPredicts.map{case(p,l) => math.pow(p-l,2)}.mean())
 
 //Section 7.5.2
+import org.apache.spark.mllib.evaluation.RegressionMetrics
 val testMetrics = new RegressionMetrics(testPredicts)
 testMetrics.rootMeanSquaredError
 testMetrics.meanSquaredError
@@ -187,6 +169,8 @@ println(model.weights.toArray.map(x => x.abs).zipWithIndex.sortBy(_._1).mkString
 
 //Section 7.5.4
 model.save(sc, "hdfs:///path/to/saved/model")
+
+import org.apache.spark.mllib.regression.LinearRegressionModel
 val model = LinearRegressionModel.load(sc, "hdfs:///path/to/saved/model")
 
 
@@ -290,6 +274,7 @@ iterateLRwSGD(Array(10000, 15000, 30000, 50000), Array(1.1), trainHPScaled, test
 
 //Section 7.6.5
 def iterateRidge(iterNums:Array[Int], stepSizes:Array[Double], regParam:Double, train:RDD[LabeledPoint], test:RDD[LabeledPoint]) = {
+  import org.apache.spark.mllib.regression.RidgeRegressionWithSGD
   for(numIter <- iterNums; step <- stepSizes)
   {
     val alg = new RidgeRegressionWithSGD()
@@ -304,6 +289,7 @@ def iterateRidge(iterNums:Array[Int], stepSizes:Array[Double], regParam:Double, 
   }
 }
 def iterateLasso(iterNums:Array[Int], stepSizes:Array[Double], regParam:Double, train:RDD[LabeledPoint], test:RDD[LabeledPoint]) = {
+  import org.apache.spark.mllib.regression.LassoWithSGD
   for(numIter <- iterNums; step <- stepSizes)
   {
     val alg = new LassoWithSGD()
@@ -432,13 +418,19 @@ iterateLRwSGDBatch(Array(400, 1000, 2000, 3000, 5000, 10000), Array(0.4), Array(
 // 10000, 0.400 0.800 -> 3.8895, 4.0199
 
 //Section 7.7.2
+import org.apache.log4j.Logger
+import org.apache.log4j.Level
 Logger.getLogger("breeze").setLevel(Level.WARN)
 def iterateLBFGS(regParams:Array[Double], numCorrections:Int, tolerance:Double, train:RDD[LabeledPoint], test:RDD[LabeledPoint]) = {
+  import org.apache.spark.mllib.optimization.LeastSquaresGradient
+  import org.apache.spark.mllib.optimization.SquaredL2Updater
+  import org.apache.spark.mllib.optimization.LBFGS
+  import org.apache.spark.mllib.util.MLUtils
   val dimnum = train.first().features.size
   for(regParam <- regParams)
   {
     val (weights:Vector, loss:Array[Double]) = LBFGS.runLBFGS(
-      train.map(x => (x.label, MLUtils.appendBias(x.features))),g
+      train.map(x => (x.label, MLUtils.appendBias(x.features))),
       new LeastSquaresGradient(),
       new SquaredL2Updater(),
       numCorrections,
