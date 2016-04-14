@@ -274,24 +274,24 @@ val postsDfNew = sqlContext.createDataFrame(postsMapped, postsDf.schema)
 
 //Section 5.1.6
 
-postsDf.groupBy('ownerUserId, 'tags, 'postTypeId).count.orderBy('ownerUserId desc).show(10)
-// +-----------+--------------------+----------+-----+
-// |ownerUserId|                tags|postTypeId|count|
-// +-----------+--------------------+----------+-----+
-// |        862|                    |         2|    1|
-// |        855|   &lt;resources&gt;|         1|    1|
-// |        846|&lt;translation&g...|         1|    1|
-// |        845|&lt;word-meaning&...|         1|    1|
-// |        842|&lt;verbs&gt;&lt;...|         1|    1|
-// |        835|&lt;grammar&gt;&l...|         1|    1|
-// |        833|                    |         2|    1|
-// |        833|&lt;meaning&gt;&l...|         1|    1|
-// |        833|     &lt;meaning&gt;|         1|    1|
-// |        814|                    |         2|    1|
-// +-----------+--------------------+----------+-----+
+postsDfNew.groupBy('ownerUserId, 'tags, 'postTypeId).count.orderBy('ownerUserId desc).show(10)
+//+-----------+--------------------+----------+-----+
+//|ownerUserId|                tags|postTypeId|count|
+//+-----------+--------------------+----------+-----+
+//|        862|                    |         2|    1|
+//|        855|         <resources>|         1|    1|
+//|        846|<translation><eng...|         1|    1|
+//|        845|<word-meaning><tr...|         1|    1|
+//|        842|  <verbs><resources>|         1|    1|
+//|        835|    <grammar><verbs>|         1|    1|
+//|        833|                    |         2|    1|
+//|        833|           <meaning>|         1|    1|
+//|        833|<meaning><article...|         1|    1|
+//|        814|                    |         2|    1|
+//+-----------+--------------------+----------+-----+
 
-postsDf.groupBy('ownerUserId).agg(max('lastActivityDate), max('score)).show(10)
-postsDf.groupBy('ownerUserId).agg(Map("lastActivityDate" -> "max", "score" -> "max")).show(10)
+postsDfNew.groupBy('ownerUserId).agg(max('lastActivityDate), max('score)).show(10)
+postsDfNew.groupBy('ownerUserId).agg(Map("lastActivityDate" -> "max", "score" -> "max")).show(10)
 // +-----------+---------------------+----------+
 // |ownerUserId|max(lastActivityDate)|max(score)|
 // +-----------+---------------------+----------+
@@ -306,7 +306,7 @@ postsDf.groupBy('ownerUserId).agg(Map("lastActivityDate" -> "max", "score" -> "m
 // |        835| 2014-08-26 15:35:...|         3|
 // |         37| 2014-09-13 13:29:...|        23|
 // +-----------+---------------------+----------+
-postsDf.groupBy('ownerUserId).agg(max('lastActivityDate), max('score).gt(5)).show(10)
+postsDfNew.groupBy('ownerUserId).agg(max('lastActivityDate), max('score).gt(5)).show(10)
 // +-----------+---------------------+----------------+
 // |ownerUserId|max(lastActivityDate)|(max(score) > 5)|
 // +-----------+---------------------+----------------+
@@ -322,7 +322,7 @@ postsDf.groupBy('ownerUserId).agg(max('lastActivityDate), max('score).gt(5)).sho
 // |         37| 2014-09-13 13:29:...|            true|
 // +-----------+---------------------+----------------+
 
-val smplDf = postsDf.where('ownerUserId >= 13 and 'ownerUserId <= 15)
+val smplDf = postsDfNew.where('ownerUserId >= 13 and 'ownerUserId <= 15)
 smplDf.groupBy('ownerUserId, 'tags, 'postTypeId).count.show()
 // +-----------+----+----------+-----+
 // |ownerUserId|tags|postTypeId|count|
@@ -405,6 +405,8 @@ $ spark-sql -e "select substring(title, 0, 70) from posts where postTypeId = 1 o
 
 postsDf.write.format("json").saveAsTable("postsjson")
 
+sql("select * from postsjson")
+
 val props = new java.util.Properties()
 props.setProperty("user", "user")
 props.setProperty("password", "password")
@@ -417,8 +419,8 @@ val postsDf = sqlContext.table("posts")
 
 val result = sqlContext.read.jdbc("jdbc:postgresql://postgresrv/mydb", "posts", Array("viewCount > 3"), props)
 
-sql("CREATE TEMPORARY TABLE postsjdbc"+
-  "USING org.apache.spark.sql.jdbc"+
+sql("CREATE TEMPORARY TABLE postsjdbc "+
+  "USING org.apache.spark.sql.jdbc "+
   "OPTIONS ("+
     "url 'jdbc:postgresql://postgresrv/mydb',"+
     "dbtable 'posts',"+
