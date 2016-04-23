@@ -1,3 +1,0 @@
--XX:MaxPermSize=384m
--Xms256m
--Xmx2G

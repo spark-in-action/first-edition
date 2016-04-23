@@ -2,30 +2,36 @@
 
 /************************************ terminal
 
-//section 2.1.1
-wget <URL>
-tar -xvf spark-<version>-bin-hadoop<version>.tgz
+# section 2.1
+vagrant up
 
-//section 2.1.2
-mkdir –p $HOME/bin/sparks
-mv spark-<version>-bin-hadoop<version> bin/sparks
+vagrant ssh
 
-ls $HOME/bin/sparks
+# section 2.1.1
+which java
+ls -la /usr/bin/java
+ls -la /etc/alternatives/java
+echo $JAVA_HOME
 
-cd $HOME/bin
-ln -s spark-<version>-bin-hadoop<version> spark
-ls -la $HOME/bin
+# section 2.1.2
+hadoop fs -ls /user
+# /usr/local/hadoop/sbin/start-dfs.sh
+# /usr/local/hadoop/sbin/stop-dfs.sh
 
-//# Example of how to replace symbolic link
-//# to point to a different version of Spark:
-//# rm spark
-//# ln -s spark-<version>-bin-hadoop<version> spark
+# section 2.1.3
+ls /opt | grep spark
+
+# Example of how to replace symbolic link
+# to point to a different version of Spark:
+# sudo rm -f /usr/local/spark
+# sudo ln -s /opt/spark-1.5.0-bin-hadoop2.4 /usr/local/spark
+
+export | grep SPARK
 
 //section 2.2.1
-cd $HOME/bin/spark
-./bin/spark-shell
+spark-shell
 
-gedit conf/log4j.properties
+nano /usr/local/spark/conf/log4j.properties
 end terminal ********************************/
 
 
@@ -57,12 +63,12 @@ end log4j.properties ********************************/
 
 
 /**************************************** terminal
-./bin/spark-shell
+spark-shell
 end terminal ************************************/
 
 
 //### 2.2.2
-val licLines = sc.textFile("LICENSE")
+val licLines = sc.textFile("/usr/local/spark/LICENSE")
 val lineCnt = licLines.count
 
 val bsdLines = licLines.filter(line => line.contains("BSD"))
@@ -94,19 +100,18 @@ alsoReversed.top(4)
 //### 2.3.2
 
 /************************************ terminal:
-cd ~/bin/spark
 echo "15,16,20,20
 77,80,94
 94,98,16,31
-31,15,20" > client-ids.log
+31,15,20" > ~/client-ids.log
 end terminal ********************************/
 
-val lines = sc.textFile("client-ids.log")
+val lines = sc.textFile("/home/spark/client-ids.log")
 
 val idsStr = lines.map(line => line.split(","))
 idsStr.foreach(println(_))
 
-strIds.first
+idsStr.first
 
 idsStr.collect
 
@@ -132,7 +137,7 @@ val finalCount  = uniqueIds.count
 val transactionCount = ids.count
 
 //Pasting blocks of code
-scala> val lines = sc.textFile("client-ids.log")
+scala> val lines = sc.textFile("/home/spark/client-ids.log")
 lines: org.apache.spark.rdd.RDD[String] = client-ids.log MapPartitionsRDD[12] at textFile at <console>:21
 scala> val ids = lines.flatMap(_.split(","))
 ids: org.apache.spark.rdd.RDD[String] = MapPartitionsRDD[13] at flatMap at <console>:23
@@ -159,7 +164,7 @@ swr.collect
 //# def takeSample(withReplacement: Boolean, num: Int, seed: Long = Utils.random.nextLong): Array[T]
 
 val taken = uniqueIds.takeSample(false, 5)
-swr.take(3)
+uniqueIds.take(3)
 
 //### 2.4
 
@@ -192,8 +197,8 @@ intIds.stdev
 
 //### 2.4.2
 intIds.histogram(Array(1.0, 50.0, 100.0))
-rdd.histogram(3)
+intIds.histogram(3)
 
-//# def sumApprox(timeout: Long, confidence: Double = 0.95): [CA]PartialResult[BoundedDouble]
-//# def meanApprox(timeout: Long, confidence: Double = 0.95): [CA]PartialResult[BoundedDouble]
+//# def sumApprox(timeout: Long, confidence: Double = 0.95): PartialResult[BoundedDouble]
+//# def meanApprox(timeout: Long, confidence: Double = 0.95): PartialResult[BoundedDouble]
 
