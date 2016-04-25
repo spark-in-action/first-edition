@@ -3,7 +3,7 @@
 
 import sqlContext.implicits._
 
-val itPostsRows = sc.textFile("path/to/italianPosts.csv")
+val itPostsRows = sc.textFile("first-edition/ch05/italianPosts.csv")
 val itPostsSplit = itPostsRows.map(x => x.split("~"))
 
 val itPostsRDD = itPostsSplit.map(x => (x(0),x(1),x(2),x(3),x(4),x(5),x(6),x(7),x(8),x(9),x(10),x(11),x(12)))
