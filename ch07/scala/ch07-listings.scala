@@ -71,7 +71,7 @@ import org.apache.spark.mllib.linalg.distributed.IndexedRow
 val rmind = new IndexedRowMatrix(rm.rows.zipWithIndex().map(x => IndexedRow(x._2, x._1)))
 
 //Section 7.4
-val housingLines = sc.textFile("hdfs:///path/to/housing.data", 3)
+val housingLines = sc.textFile("first-edition/ch07/housing.data", 6)
 val housingVals = housingLines.map(x => Vectors.dense(x.split(",").map(_.trim().toDouble)))
 
 //Section 7.4.1
@@ -136,13 +136,13 @@ val housingData = housingVals.map(x => { val a = x.toArray; LabeledPoint(a(a.len
 //Section 7.4.5
 val sets = housingData.randomSplit(Array(0.8, 0.2))
 val housingTrain = sets(0)
-val housingTest = sets(1)
+val housingValid = sets(1)
 
 //Section 7.4.6
 import org.apache.spark.mllib.feature.StandardScaler
 val scaler = new StandardScaler(true, true).fit(housingTrain.map(x => x.features))
 val trainScaled = housingTrain.map(x => LabeledPoint(x.label, scaler.transform(x.features)))
-val testScaled = housingTest.map(x => LabeledPoint(x.label, scaler.transform(x.features)))
+val validScaled = housingValid.map(x => LabeledPoint(x.label, scaler.transform(x.features)))
 
 //Section 7.5
 import org.apache.spark.mllib.regression.LinearRegressionWithSGD
@@ -150,19 +150,19 @@ val alg = new LinearRegressionWithSGD()
 alg.setIntercept(true)
 alg.optimizer.setNumIterations(200)
 trainScaled.cache()
-testScaled.cache()
+validScaled.cache()
 val model = alg.run(trainScaled)
 
 //Section 7.5.1
-val testPredicts = testScaled.map(x => (model.predict(x.features), x.label))
-testPredicts.collect()
-val RMSE = math.sqrt(testPredicts.map{case(p,l) => math.pow(p-l,2)}.mean())
+val validPredicts = validScaled.map(x => (model.predict(x.features), x.label))
+validPredicts.collect()
+val RMSE = math.sqrt(validPredicts.map{case(p,l) => math.pow(p-l,2)}.mean())
 
 //Section 7.5.2
 import org.apache.spark.mllib.evaluation.RegressionMetrics
-val testMetrics = new RegressionMetrics(testPredicts)
-testMetrics.rootMeanSquaredError
-testMetrics.meanSquaredError
+val validMetrics = new RegressionMetrics(validPredicts)
+validMetrics.rootMeanSquaredError
+validMetrics.meanSquaredError
 
 //Section 7.5.3
 println(model.weights.toArray.map(x => x.abs).zipWithIndex.sortBy(_._1).mkString(", "))
@@ -182,15 +182,15 @@ def iterateLRwSGD(iterNums:Array[Int], stepSizes:Array[Double], train:RDD[Labele
     alg.setIntercept(true).optimizer.setNumIterations(numIter).setStepSize(step)
     val model = alg.run(train)
     val rescaledPredicts = train.map(x => (model.predict(x.features), x.label))
-    val testPredicts = test.map(x => (model.predict(x.features), x.label))
+    val validPredicts = test.map(x => (model.predict(x.features), x.label))
     val meanSquared = math.sqrt(rescaledPredicts.map({case(p,l) => math.pow(p-l,2)}).mean())
-    val meanSquaredTest = math.sqrt(testPredicts.map({case(p,l) => math.pow(p-l,2)}).mean())
-    println("%d, %5.3f -> %.4f, %.4f".format(numIter, step, meanSquared, meanSquaredTest))
+    val meanSquaredValid = math.sqrt(validPredicts.map({case(p,l) => math.pow(p-l,2)}).mean())
+    println("%d, %5.3f -> %.4f, %.4f".format(numIter, step, meanSquared, meanSquaredValid))
     //Uncomment if you wish to see weghts and intercept values:
-    //println("%d, %4.2f -> %.4f, %.4f (%s, %f)".format(numIter, step, meanSquared, meanSquaredTest, model.weights, model.intercept))
+    //println("%d, %4.2f -> %.4f, %.4f (%s, %f)".format(numIter, step, meanSquared, meanSquaredValid, model.weights, model.intercept))
   }
 }
-iterateLRwSGD(Array(200, 400, 600), Array(0.05, 0.1, 0.5, 1, 1.5, 2, 3), trainScaled, testScaled)
+iterateLRwSGD(Array(200, 400, 600), Array(0.05, 0.1, 0.5, 1, 1.5, 2, 3), trainScaled, validScaled)
 // Our results:
 // 200, 0.050 -> 7.5420, 7.4786
 // 200, 0.100 -> 5.0437, 5.0910
@@ -225,14 +225,14 @@ housingHP.first().features.size
 
 val setsHP = housingHP.randomSplit(Array(0.8, 0.2))
 val housingHPTrain = setsHP(0)
-val housingHPTest = setsHP(1)
+val housingHPValid = setsHP(1)
 val scalerHP = new StandardScaler(true, true).fit(housingHPTrain.map(x => x.features))
 val trainHPScaled = housingHPTrain.map(x => LabeledPoint(x.label, scalerHP.transform(x.features)))
-val testHPScaled = housingHPTest.map(x => LabeledPoint(x.label, scalerHP.transform(x.features)))
+val validHPScaled = housingHPValid.map(x => LabeledPoint(x.label, scalerHP.transform(x.features)))
 trainHPScaled.cache()
-testHPScaled.cache()
+validHPScaled.cache()
 
-iterateLRwSGD(Array(200, 400), Array(0.4, 0.5, 0.6, 0.7, 0.9, 1.0, 1.1, 1.2, 1.3, 1.5), trainHPScaled, testHPScaled)
+iterateLRwSGD(Array(200, 400), Array(0.4, 0.5, 0.6, 0.7, 0.9, 1.0, 1.1, 1.2, 1.3, 1.5), trainHPScaled, validHPScaled)
 // Our results:
 // 200, 0.400 -> 4.5423, 4.2002
 // 200, 0.500 -> 4.4632, 4.1532
@@ -255,7 +255,7 @@ iterateLRwSGD(Array(200, 400), Array(0.4, 0.5, 0.6, 0.7, 0.9, 1.0, 1.1, 1.2, 1.3
 // 400, 1.300 -> 106.0047, 121.4576
 // 400, 1.500 -> 162153976.4283, 163000519.6179
 
-iterateLRwSGD(Array(200, 400, 800, 1000, 3000, 6000), Array(1.1), trainHPScaled, testHPScaled)
+iterateLRwSGD(Array(200, 400, 800, 1000, 3000, 6000), Array(1.1), trainHPScaled, validHPScaled)
 //Our results:
 // 200, 1.100 -> 4.1605, 4.0108
 // 400, 1.100 -> 4.0378, 3.9836
@@ -265,7 +265,7 @@ iterateLRwSGD(Array(200, 400, 800, 1000, 3000, 6000), Array(1.1), trainHPScaled,
 // 6000, 1.100 -> 3.7915, 4.1138
 
 //Section 7.6.3
-iterateLRwSGD(Array(10000, 15000, 30000, 50000), Array(1.1), trainHPScaled, testHPScaled)
+iterateLRwSGD(Array(10000, 15000, 30000, 50000), Array(1.1), trainHPScaled, validHPScaled)
 // Our results:
 // 10000, 1.100 -> 3.7638, 4.1553
 // 15000, 1.100 -> 3.7441, 4.1922
@@ -282,10 +282,10 @@ def iterateRidge(iterNums:Array[Int], stepSizes:Array[Double], regParam:Double, 
     alg.optimizer.setNumIterations(numIter).setRegParam(regParam).setStepSize(step)
     val model = alg.run(train)
     val rescaledPredicts = train.map(x => (model.predict(x.features), x.label))
-    val testPredicts = test.map(x => (model.predict(x.features), x.label))
+    val validPredicts = test.map(x => (model.predict(x.features), x.label))
     val meanSquared = math.sqrt(rescaledPredicts.map({case(p,l) => math.pow(p-l,2)}).mean())
-    val meanSquaredTest = math.sqrt(testPredicts.map({case(p,l) => math.pow(p-l,2)}).mean())
-    println("%d, %5.3f -> %.4f, %.4f".format(numIter, step, meanSquared, meanSquaredTest))
+    val meanSquaredValid = math.sqrt(validPredicts.map({case(p,l) => math.pow(p-l,2)}).mean())
+    println("%d, %5.3f -> %.4f, %.4f".format(numIter, step, meanSquared, meanSquaredValid))
   }
 }
 def iterateLasso(iterNums:Array[Int], stepSizes:Array[Double], regParam:Double, train:RDD[LabeledPoint], test:RDD[LabeledPoint]) = {
@@ -296,14 +296,14 @@ def iterateLasso(iterNums:Array[Int], stepSizes:Array[Double], regParam:Double, 
     alg.setIntercept(true).optimizer.setNumIterations(numIter).setStepSize(step).setRegParam(regParam)
     val model = alg.run(train)
     val rescaledPredicts = train.map(x => (model.predict(x.features), x.label))
-    val testPredicts = test.map(x => (model.predict(x.features), x.label))
+    val validPredicts = test.map(x => (model.predict(x.features), x.label))
     val meanSquared = math.sqrt(rescaledPredicts.map({case(p,l) => math.pow(p-l,2)}).mean())
-    val meanSquaredTest = math.sqrt(testPredicts.map({case(p,l) => math.pow(p-l,2)}).mean())
-    println("%d, %5.3f -> %.4f, %.4f".format(numIter, step, meanSquared, meanSquaredTest))
+    val meanSquaredValid = math.sqrt(validPredicts.map({case(p,l) => math.pow(p-l,2)}).mean())
+    println("%d, %5.3f -> %.4f, %.4f".format(numIter, step, meanSquared, meanSquaredValid))
     println("\tweights: "+model.weights)
   }
 }
-iterateRidge(Array(200, 400, 1000, 3000, 6000, 10000, 50000, 200000, 300000), Array(1.1), 0.01, trainHPScaled, testHPScaled)
+iterateRidge(Array(200, 400, 1000, 3000, 6000, 10000), Array(1.1), 0.01, trainHPScaled, validHPScaled)
 // Our results:
 // 200, 1.100 -> 4.2354, 4.0095
 // 400, 1.100 -> 4.1355, 3.9790
@@ -311,7 +311,7 @@ iterateRidge(Array(200, 400, 1000, 3000, 6000, 10000, 50000, 200000, 300000), Ar
 // 3000, 1.100 -> 3.9842, 3.9695
 // 6000, 1.100 -> 3.9674, 3.9728
 // 10000, 1.100 -> 3.9607, 3.9745
-iterateLasso(Array(200, 400, 1000, 3000, 6000, 10000, 50000, 200000, 300000), Array(1.1), 0.01, trainHPScaled, testHPScaled)
+iterateLasso(Array(200, 400, 1000, 3000, 6000, 10000, 15000), Array(1.1), 0.01, trainHPScaled, validHPScaled)
 //Our results:
 // 200, 1.100 -> 4.1762, 4.0223
 // 400, 1.100 -> 4.0632, 3.9964
@@ -330,13 +330,13 @@ def iterateLRwSGDBatch(iterNums:Array[Int], stepSizes:Array[Double], fractions:A
     alg.optimizer.setMiniBatchFraction(miniBFraction)
     val model = alg.run(train)
     val rescaledPredicts = train.map(x => (model.predict(x.features), x.label))
-    val testPredicts = test.map(x => (model.predict(x.features), x.label))
+    val validPredicts = test.map(x => (model.predict(x.features), x.label))
     val meanSquared = math.sqrt(rescaledPredicts.map({case(p,l) => math.pow(p-l,2)}).mean())
-    val meanSquaredTest = math.sqrt(testPredicts.map({case(p,l) => math.pow(p-l,2)}).mean())
-    println("%d, %5.3f %5.3f -> %.4f, %.4f".format(numIter, step, miniBFraction, meanSquared, meanSquaredTest))
+    val meanSquaredValid = math.sqrt(validPredicts.map({case(p,l) => math.pow(p-l,2)}).mean())
+    println("%d, %5.3f %5.3f -> %.4f, %.4f".format(numIter, step, miniBFraction, meanSquared, meanSquaredValid))
   }
 }
-iterateLRwSGDBatch(Array(400, 1000), Array(0.05, 0.09, 0.1, 0.15, 0.2, 0.3, 0.35, 0.4, 0.5, 1), Array(0.01, 0.1), trainHPScaled, testHPScaled)
+iterateLRwSGDBatch(Array(400, 1000), Array(0.05, 0.09, 0.1, 0.15, 0.2, 0.3, 0.35, 0.4, 0.5, 1), Array(0.01, 0.1), trainHPScaled, validHPScaled)
 //Our results:
 // 400, 0.050 0.010 -> 6.0134, 5.2776
 // 400, 0.050 0.100 -> 5.8968, 4.9389
@@ -378,7 +378,7 @@ iterateLRwSGDBatch(Array(400, 1000), Array(0.05, 0.09, 0.1, 0.15, 0.2, 0.3, 0.35
 // 1000, 0.500 0.100 -> 4.5170, 4.3467
 // 1000, 1.000 0.010 -> 67686532719.3362, 62690702177.4123
 // 1000, 1.000 0.100 -> 103237131.4750, 119664651.1957
-iterateLRwSGDBatch(Array(400, 1000, 2000, 3000, 5000, 10000), Array(0.4), Array(0.1, 0.2, 0.4, 0.5, 0.6, 0.8), trainHPScaled, testHPScaled)
+iterateLRwSGDBatch(Array(400, 1000, 2000, 3000, 5000, 10000), Array(0.4), Array(0.1, 0.2, 0.4, 0.5, 0.6, 0.8), trainHPScaled, validHPScaled)
 //Our results:
 // 400, 0.400 0.100 -> 4.5017, 4.0547
 // 400, 0.400 0.200 -> 4.4509, 4.0288
@@ -444,13 +444,13 @@ def iterateLBFGS(regParams:Array[Double], numCorrections:Int, tolerance:Double, 
       weights(weights.size - 1))
 
     val trainPredicts = train.map(x => (model.predict(x.features), x.label))
-    val testPredicts = test.map(x => (model.predict(x.features), x.label))
+    val validPredicts = test.map(x => (model.predict(x.features), x.label))
     val meanSquared = math.sqrt(trainPredicts.map({case(p,l) => math.pow(p-l,2)}).mean())
-    val meanSquaredTest = math.sqrt(testPredicts.map({case(p,l) => math.pow(p-l,2)}).mean())
-    println("%5.3f, %d -> %.4f, %.4f".format(regParam, numCorrections, meanSquared, meanSquaredTest))
+    val meanSquaredValid = math.sqrt(validPredicts.map({case(p,l) => math.pow(p-l,2)}).mean())
+    println("%5.3f, %d -> %.4f, %.4f".format(regParam, numCorrections, meanSquared, meanSquaredValid))
   }
 }
-iterateLBFGS(Array(0.005, 0.007, 0.01, 0.02, 0.03, 0.05, 0.1), 10, 1e-5, trainHPScaled, testHPScaled)
+iterateLBFGS(Array(0.005, 0.007, 0.01, 0.02, 0.03, 0.05, 0.1), 10, 1e-5, trainHPScaled, validHPScaled)
 //Our results:
 // 0.005, 10 -> 3.8335, 4.0383
 // 0.007, 10 -> 3.8848, 4.0005
