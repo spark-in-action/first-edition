@@ -1,46 +1,11 @@
 
-import scala.collection.mutable.ArrayBuffer
 import sqlContext.implicits._
-import org.apache.spark.sql.types.{StructType,StructField,StringType,DoubleType}
-import org.apache.spark.mllib.linalg.{Vectors,Vector}
-import org.apache.spark.mllib.linalg.{DenseVector, SparseVector}
-import org.apache.spark.mllib.evaluation.MulticlassMetrics
-import org.apache.spark.mllib.evaluation.BinaryClassificationMetrics
-import org.apache.spark.mllib.regression.LabeledPoint
-import org.apache.spark.mllib.linalg.Vectors
-import org.apache.spark.sql.Row
-import org.apache.spark.rdd.RDD
-import org.apache.spark.sql.DataFrame
-import org.apache.spark.sql.UserDefinedFunction
-import org.apache.spark.sql.Column
-import org.apache.spark.ml.feature.StringIndexer
-import org.apache.spark.ml.feature.StringIndexerModel
-import org.apache.spark.ml.feature.OneHotEncoder
-import org.apache.spark.ml.feature.VectorAssembler
-import org.apache.spark.ml.feature.StandardScaler
-import org.apache.spark.ml.feature.StandardScalerModel
-import org.apache.spark.ml.classification.LogisticRegression
-import org.apache.spark.ml.classification.LogisticRegressionModel
-import org.apache.spark.ml.classification.OneVsRest
-import org.apache.spark.ml.classification.DecisionTreeClassifier
-import org.apache.spark.ml.classification.RandomForestClassifier
-import org.apache.spark.ml.evaluation.BinaryClassificationEvaluator
-import org.apache.spark.ml.evaluation.RegressionEvaluator
-import org.apache.spark.ml.regression.RandomForestRegressor
-import org.apache.spark.ml.tuning.CrossValidator
-import org.apache.spark.ml.Pipeline
-import org.apache.spark.ml.param.ParamMap
-import org.apache.spark.ml.tree.CategoricalSplit
-import org.apache.spark.ml.tree.ContinuousSplit
-import org.apache.spark.ml.tree.InternalNode
-import org.apache.spark.ml.tuning.ParamGridBuilder
-import org.apache.spark.mllib.clustering.KMeans
-
 
 //section 8.2.2
-val census_raw = sc.textFile("/path/to/adult.raw", 4).map(x => x.split(", ")).
+val census_raw = sc.textFile("first-edition/ch08/adult.raw", 4).map(x => x.split(", ")).
     map(row => row.map(x => try { x.toDouble } catch { case _ => x }))
 
+import org.apache.spark.sql.types.{StructType,StructField,StringType,DoubleType}
 val adultschema = StructType(Array(
     StructField("age",DoubleType,true),
     StructField("workclass",StringType,true),
@@ -57,6 +22,7 @@ val adultschema = StructType(Array(
     StructField("native_country",StringType,true),
     StructField("income",StringType,true)
 ))
+import org.apache.spark.sql.Row
 val dfraw = sqlContext.applySchema(census_raw.map(Row.fromSeq(_)), adultschema)
 dfraw.show()
 
@@ -67,7 +33,10 @@ val dfrawrpl = dfrawrp.na.replace(Array("occupation"), Map("?" -> "Prof-specialt
 val dfrawnona = dfrawrpl.na.replace(Array("native_country"), Map("?" -> "United-States"))
 
 //converting strings to numeric values
+import org.apache.spark.sql.DataFrame
 def indexStringColumns(df:DataFrame, cols:Array[String]):DataFrame = {
+    import org.apache.spark.ml.feature.StringIndexer
+    import org.apache.spark.ml.feature.StringIndexerModel
     //variable newdf will be updated several times
     var newdf = df
     for(c <- cols) {
@@ -81,6 +50,7 @@ def indexStringColumns(df:DataFrame, cols:Array[String]):DataFrame = {
 val dfnumeric = indexStringColumns(dfrawnona, Array("workclass", "education", "marital_status", "occupation", "relationship", "race", "sex", "native_country", "income"))
 
 def oneHotEncodeColumns(df:DataFrame, cols:Array[String]):DataFrame = {
+    import org.apache.spark.ml.feature.OneHotEncoder
     var newdf = df
     for(c <- cols) {
         val onehotenc = new OneHotEncoder().setInputCol(c)
@@ -92,6 +62,7 @@ def oneHotEncodeColumns(df:DataFrame, cols:Array[String]):DataFrame = {
 }
 val dfhot = oneHotEncodeColumns(dfnumeric, Array("workclass", "education", "marital_status", "occupation", "relationship", "race", "native_country"))
 
+import org.apache.spark.ml.feature.VectorAssembler
 val va = new VectorAssembler().setOutputCol("features")
 va.setInputCols(dfhot.columns.diff(Array("income")))
 val lpoints = va.transform(dfhot).select("features", "income").withColumnRenamed("income", "label")
@@ -102,9 +73,11 @@ val adulttrain = splits(0).cache()
 val adultvalid = splits(1).cache()
 
 
+import org.apache.spark.ml.classification.LogisticRegression
 val lr = new LogisticRegression
 lr.setRegParam(0.01).setMaxIter(1000).setFitIntercept(true)
 val lrmodel = lr.fit(adulttrain)
+import org.apache.spark.ml.param.ParamMap
 val lrmodel = lr.fit(adulttrain, ParamMap(lr.regParam -> 0.01, lr.maxIter -> 500, lr.fitIntercept -> true))
 
 lrmodel.weights
@@ -112,6 +85,7 @@ lrmodel.intercept
 
 //section 8.2.3
 val validpredicts = lrmodel.transform(adultvalid)
+import org.apache.spark.ml.evaluation.BinaryClassificationEvaluator
 val bceval = new BinaryClassificationEvaluator()
 bceval.evaluate(validpredicts)
 bceval.getMetricName
@@ -119,8 +93,10 @@ bceval.getMetricName
 bceval.setMetricName("areaUnderPR")
 bceval.evaluate(validpredicts)
 
+import org.apache.spark.ml.classification.LogisticRegressionModel
 def computePRCurve(train:DataFrame, valid:DataFrame, lrmodel:LogisticRegressionModel) =
 {
+    import org.apache.spark.mllib.evaluation.BinaryClassificationMetrics
     for(threshold <- 0 to 10)
     {
         var thr = threshold/10.
@@ -148,6 +124,7 @@ computePRCurve(adulttrain, adultvalid, lrmodel)
 // 1.0: R=0.019214, P=1.000000
 def computeROCCurve(train:DataFrame, valid:DataFrame, lrmodel:LogisticRegressionModel) =
 {
+    import org.apache.spark.mllib.evaluation.BinaryClassificationMetrics
     for(threshold <- 0 to 10)
     {
         var thr = threshold/10.
@@ -175,7 +152,9 @@ computeROCCurve(adulttrain, adultvalid, lrmodel)
 // 1,0: R=0,027004, P=1,000000
 
 //section 8.2.5
+import org.apache.spark.ml.tuning.CrossValidator
 val cv = new CrossValidator().setEstimator(lr).setEvaluator(bceval).setNumFolds(5)
+import org.apache.spark.ml.tuning.ParamGridBuilder
 val paramGrid = new ParamGridBuilder().addGrid(lr.maxIter, Array(1000)).
     addGrid(lr.regParam, Array(0.0001, 0.001, 0.005, 0.01, 0.05, 0.1, 0.5)).build()
 cv.setEstimatorParamMaps(paramGrid)
@@ -204,7 +183,7 @@ val penschema = StructType(Array(
     StructField("pix16",DoubleType,true),
     StructField("label",DoubleType,true)
 ))
-val pen_raw = sc.textFile("/path/to/penbased.dat", 4).map(x => x.split(", ")).
+val pen_raw = sc.textFile("first-edition/ch08/penbased.dat", 4).map(x => x.split(", ")).
     map(row => row.map(x => x.toDouble))
 
 val dfpen = sqlContext.applySchema(pen_raw.map(Row.fromSeq(_)), penschema)
@@ -217,6 +196,7 @@ val pentrain = pensets(0).cache()
 val penvalid = pensets(1).cache()
 
 val penlr = new LogisticRegression().setRegParam(0.01)
+import org.apache.spark.ml.classification.OneVsRest
 val ovrest = new OneVsRest()
 ovrest.setClassifier(penlr)
 
@@ -224,6 +204,8 @@ val ovrestmodel = ovrest.fit(pentrain)
 
 val penresult = ovrestmodel.transform(penvalid)
 val penPreds = penresult.select("prediction", "label").map(row => (row.getDouble(0), row.getDouble(1)))
+
+import org.apache.spark.mllib.evaluation.MulticlassMetrics
 val penmm = new MulticlassMetrics(penPreds)
 penmm.precision
 //0.9018214127054642
@@ -247,6 +229,8 @@ penmm.confusionMatrix
 
 
 //section 8.3.1
+import org.apache.spark.ml.feature.StringIndexer
+import org.apache.spark.ml.feature.StringIndexerModel
 val dtsi = new StringIndexer().setInputCol("label").setOutputCol("label-ind")
 val dtsm:StringIndexerModel = dtsi.fit(penlpoints)
 val pendtlpoints = dtsm.transform(penlpoints).drop("label").withColumnRenamed("label-ind", "label")
@@ -255,13 +239,16 @@ val pendtsets = pendtlpoints.randomSplit(Array(0.8, 0.2))
 val pendttrain = pendtsets(0).cache()
 val pendtvalid = pendtsets(1).cache()
 
+import org.apache.spark.ml.classification.DecisionTreeClassifier
 val dt = new DecisionTreeClassifier()
 dt.setMaxDepth(20)
 val dtmodel = dt.fit(pendttrain)
 
 dtmodel.rootNode
+import org.apache.spark.ml.tree.InternalNode
 dtmodel.rootNode.asInstanceOf[InternalNode].split.featureIndex
 //15
+import org.apache.spark.ml.tree.ContinuousSplit
 dtmodel.rootNode.asInstanceOf[InternalNode].split.asInstanceOf[ContinuousSplit].threshold
 //51
 dtmodel.rootNode.asInstanceOf[InternalNode].leftChild
@@ -285,6 +272,7 @@ dtmm.confusionMatrix
 // 0.0    1.0    0.0    0.0    1.0    0.0    3.0    3.0    4.0    198.0
 
 //section 8.3.2
+import org.apache.spark.ml.classification.RandomForestClassifier
 val rf = new RandomForestClassifier()
 rf.setMaxDepth(20)
 val rfmodel = rf.fit(pendttrain)
@@ -308,8 +296,10 @@ rfmm.confusionMatrix
 
 
 //section 8.4.1
+import org.apache.spark.mllib.linalg.Vector
 val penflrdd = penlpoints.map(row => (row(0).asInstanceOf[Vector], row(1).asInstanceOf[Double]))
 val penrdd = penflrdd.map(x => x._1).cache()
+import org.apache.spark.mllib.clustering.KMeans
 val kmmodel = KMeans.train(penrdd, 10, 5000, 20)
 
 kmmodel.computeCost(penrdd)
@@ -319,6 +309,8 @@ math.sqrt(kmmodel.computeCost(penrdd)/penrdd.count())
 
 val kmpredicts = penflrdd.map(feat_lbl => (kmmodel.predict(feat_lbl._1).toDouble, feat_lbl._2))
 
+
+import org.apache.spark.rdd.RDD
 //rdd contains tuples (prediction, label)
 def printContingency(rdd:RDD[(Double, Double)], labels:Seq[Int])
 {
