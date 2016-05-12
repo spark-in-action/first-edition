@@ -69,6 +69,7 @@ object StreamingLogAnalyzer
     ssc.checkpoint(checkpointDir.get)
 
     //set up the receiving Kafka stream
+    println("Starting Kafka direct stream to broker list: "+brokerList.get)
     val kafkaReceiverParams = Map[String, String](
         "metadata.broker.list" -> brokerList.get)
     val kafkaStream = KafkaUtils.
@@ -122,7 +123,7 @@ object StreamingLogAnalyzer
     //CALCULATE REQUESTS PER SECOND
     //this combineByKey counts all LogLines per unique second
     val reqsPerSecond = logLinesPerSecond.combineByKey(
-        l => 1.asInstanceOf[Long],
+        l => 1L,
         (c: Long, ll: LogLine) => c + 1,
         (c1: Long, c2: Long) => c1 + c2,
         new HashPartitioner(numberPartitions),
@@ -146,7 +147,7 @@ object StreamingLogAnalyzer
       //LogLines that do match the adUrlPattern are mapped to tuples ((timestamp, parsed ad category), LogLine)
       flatMap(l => {
         adUrlPattern.findFirstMatchIn(l._2.url) match {
-          case Some(urlmatch) => List(((l._1, urlmatch.group("adcat")), l._2))
+          case Some(urlmatch) => List(((l._1, urlmatch.group("adtype")), l._2))
           case None => List()
         }
       }).
@@ -158,17 +159,17 @@ object StreamingLogAnalyzer
           true)
 
     //data key types for the output map
-    val SESSION_COUNT = "1"
-    val REQ_PER_SEC = "2"
-    val ERR_PER_SEC = "3"
-    val ADS_PER_SEC = "4"
+    val SESSION_COUNT = "SESS"
+    val REQ_PER_SEC = "REQ"
+    val ERR_PER_SEC = "ERR"
+    val ADS_PER_SEC = "AD"
 
-    //maps each count to a tuple (current time with milliseconds removed, a Map containing the count under the SESSION_COUNT key)
-    val finalSessionCount = sessionCount.map(c => ((System.currentTimeMillis / 1000) * 1000, Map(SESSION_COUNT -> c)))
     //maps each count to a tuple (timestamp, a Map containing the count under the REQ_PER_SEC key)
     val requests = reqsPerSecond.map(sc => (sc._1, Map(REQ_PER_SEC -> sc._2)))
     //maps each count to a tuple (timestamp, a Map containing the count under the ERR_PER_SEC key)
     val errors = errorsPerSecond.map(sc => (sc._1, Map(ERR_PER_SEC -> sc._2)))
+    //maps each count to a tuple (current time with milliseconds removed, a Map containing the count under the SESSION_COUNT key)
+    val finalSessionCount = sessionCount.map(c => ((System.currentTimeMillis / 1000) * 1000, Map(SESSION_COUNT -> c)))
     //maps each count to a tuple (timestamp, a Map containing the count per category under the key ADS_PER_SEC#<ad category>)
     val ads = adsPerSecondAndType.map(stc => (stc._1._1, Map(s"$ADS_PER_SEC#${stc._1._2}" -> stc._2)))
 
@@ -192,6 +193,8 @@ object StreamingLogAnalyzer
           }//foreach
         })//foreachPartition
       })//foreachRDD
+
+    println("Starting the streaming context... Kill me with ^C")
 
     ssc.start()
     ssc.awaitTermination()

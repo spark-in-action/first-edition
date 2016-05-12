@@ -13,13 +13,13 @@ import javax.websocket.server.ServerEndpoint;
 /**
  * WebSockets endpoint for receiving messages from LogStatsReceiver and
  * dispatching them to clients.
- * 
+ *
  */
 @ServerEndpoint(value = "/WebStatsEndpoint")
 public class WebStatsEndpoint implements LogStatsObserver
 {
 	private Session currentSession = null;
-	
+
 	@OnOpen
 	public void onOpen(Session session, EndpointConfig ec) {
 		System.out.println("WebStatsEndpoint onOpen");

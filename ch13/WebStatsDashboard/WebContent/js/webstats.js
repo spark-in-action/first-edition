@@ -4,12 +4,12 @@ var graphData = {};
 
 var keys = [ "users", "requests", "errors", "ads1", "ads2", "ads3" ];
 var keymap = {
-	'1' : 'users',
-	'2' : 'requests',
-	'3' : 'errors',
-	'4#1' : 'ads1',
-	'4#2' : 'ads2',
-	'4#3' : 'ads3'
+	'SESS' : 'users',
+	'REQ' : 'requests',
+	'ERR' : 'errors',
+	'AD#1' : 'ads1',
+	'AD#2' : 'ads2',
+	'AD#3' : 'ads3'
 };
 
 var messages = [];
@@ -76,7 +76,7 @@ var getGraphData = function(name) {
 
 // D3:
 var margin = { top : 20, right : 80, bottom : 30, left : 50 }, 
-	width = 960 - margin.left - margin.right, height = 320 - margin.top	- margin.bottom;
+	width = 700 - margin.left - margin.right, height = 320 - margin.top	- margin.bottom;
 
 var usrx = d3.time.scale().range([ 0, width ]);
 var usry = d3.scale.linear().range([ height, 0 ]);
