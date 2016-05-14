@@ -1,23 +1,6 @@
 
-// section 4.1.1
-class ClassOne[T](val input: T) { }
-class ClassOneStr(val one: ClassOne[String]) {
-    def duplicatedString() = one.input + one.input
-}
-class ClassOneInt(val one: ClassOne[Int]) {
-    def duplicatedInt() = one.input.toString + one.input.toString
-}
-implicit def toStrMethods(one: ClassOne[String]) = new ClassOneStr(one)
-implicit def toIntMethods(one: ClassOne[Int]) = new ClassOneInt(one)
-
-val oneStrTest = new ClassOne("test")
-val oneIntTest = new ClassOne(123)
-oneStrTest.duplicatedString()
-oneIntTest.duplicatedInt()
-oneIntTest.duplicatedString()
-
 //section 4.1.2
-val tranFile = sc.textFile("path/to/ch04_data_transactions.txt")
+val tranFile = sc.textFile("first-edition/ch04/ch04_data_transactions.txt")
 val tranData = tranFile.map(_.split("#"))
 var transByCust = tranData.map(tran => (tran(2).toInt, tran))
 
@@ -143,14 +126,14 @@ def mergeVal:((Double,Double,Int,Double),Array[String])=>(Double,Double,Int,Doub
       (min(mn,total/q),max(mx,total/q),c+q,tot+total) } }
 def mergeComb:((Double,Double,Int,Double),(Double,Double,Int,Double))=>(Double,Double,Int,Double) =
          {case((mn1,mx1,c1,tot1),(mn2,mx2,c2,tot2)) =>
-         (min(mn1,mn1),max(mx1,mx2),c1+c2,tot1+tot2) }
+         (min(mn1,mn2),max(mx1,mx2),c1+c2,tot1+tot2) }
 val avgByCust = transByCust.combineByKey(createComb, mergeVal, mergeComb,
          new org.apache.spark.HashPartitioner(transByCust.partitions.size)).
          mapValues({case(mn,mx,cnt,tot) => (mn,mx,cnt,tot,tot/cnt)})
 avgByCust.first()
 
-sortedProds.map(_._2).map(x=>x._2.mkString(", ")+", "+x._1).saveAsTextFile("/destination")
-avgByCust.map{ case (id, (min, max, cnt, tot, avg)) => "%d#%.2f#%.2f#%d#%.2f#%.2f".format(id, min, max, cnt, tot, avg)}.saveAsTextFile("/destination")
+totalsAndProds.map(_._2).map(x=>x._2.mkString("#")+", "+x._1).saveAsTextFile("ch04output-totalsPerProd")
+avgByCust.map{ case (id, (min, max, cnt, tot, avg)) => "%d#%.2f#%.2f#%d#%.2f#%.2f".format(id, min, max, cnt, tot, avg)}.saveAsTextFile("ch04output-avgByCust")
 
 //Section 4.4.1
 val list = List.fill(500)(scala.util.Random.nextInt(10))

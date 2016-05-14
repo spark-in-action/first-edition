@@ -123,7 +123,7 @@ avgByCust = transByCust.combineByKey(createComb, mergeVal, mergeComb).\
 mapValues(lambda (mn,mx,cnt,tot): (mn,mx,cnt,tot,tot/cnt))
 avgByCust.first()
 
-sortedProds.map(lambda p: p[1]).map(lambda x: ", ".join(x[1])+", "+str(x[0])).saveAsTextFile("/destination")
+totalsAndProds.map(lambda p: p[1]).map(lambda x: ", ".join(x[1])+", "+str(x[0])).saveAsTextFile("/destination")
 avgByCust.map(lambda (pid, (mn, mx, cnt, tot, avg)): "%d#%.2f#%.2f#%d#%.2f#%.2f" % (pid, mn, mx, cnt, tot, avg)).saveAsTextFile("/destination")
 
 #section 4.4.1
