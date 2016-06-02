@@ -37,7 +37,7 @@ amounts.foldByKey(100000)((p1, p2) => p1 + p2).collect()
 
 complTrans = complTrans :+ Array("2015-03-30", "11:59 PM", "76", "63", "1", "0.00")
 transByCust = transByCust.union(sc.parallelize(complTrans).map(t => (t(2).toInt, t)))
-transByCust.map(t => t._2.mkString("#")).saveAsTextFile("/destination")
+transByCust.map(t => t._2.mkString("#")).saveAsTextFile("ch04output-transByCust")
 
 val prods = transByCust.aggregateByKey(List[String]())(
    (prods, tran) => prods ::: List(tran(3)),
@@ -61,7 +61,7 @@ val transByProd = tranData.map(tran => (tran(3).toInt, tran))
 val totalsByProd = transByProd.mapValues(t => t(5).toDouble).
    reduceByKey{case(tot1, tot2) => tot1 + tot2}
 
-val products = sc.textFile("/pathto/ch04_data_products.txt").
+val products = sc.textFile("first-edition/ch04/ch04_data_products.txt").
     map(line => line.split("#")).
     map(p => (p(0).toInt, p))
 val totalsAndProds = totalsByProd.join(products)
@@ -114,7 +114,6 @@ implicit val emplOrdering = new Ordering[Employee] {
 implicit val emplOrdering: Ordering[Employee] = Ordering.by(_.lastName)
 
 //Section 4.3.3
-import scala.math.{min,max}
 def createComb = (t:Array[String]) => {
   val total = t(5).toDouble
   val q = t(4).toInt
@@ -123,10 +122,10 @@ def mergeVal:((Double,Double,Int,Double),Array[String])=>(Double,Double,Int,Doub
     { case((mn,mx,c,tot),t) => {
       val total = t(5).toDouble
       val q = t(4).toInt
-      (min(mn,total/q),max(mx,total/q),c+q,tot+total) } }
+      (scala.math.min(mn,total/q),scala.math.max(mx,total/q),c+q,tot+total) } }
 def mergeComb:((Double,Double,Int,Double),(Double,Double,Int,Double))=>(Double,Double,Int,Double) =
          {case((mn1,mx1,c1,tot1),(mn2,mx2,c2,tot2)) =>
-         (min(mn1,mn2),max(mx1,mx2),c1+c2,tot1+tot2) }
+         (scala.math.min(mn1,mn2),scala.math.max(mx1,mx2),c1+c2,tot1+tot2) }
 val avgByCust = transByCust.combineByKey(createComb, mergeVal, mergeComb,
          new org.apache.spark.HashPartitioner(transByCust.partitions.size)).
          mapValues({case(mn,mx,cnt,tot) => (mn,mx,cnt,tot,tot/cnt)})

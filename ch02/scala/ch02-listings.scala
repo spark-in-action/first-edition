@@ -74,8 +74,6 @@ val lineCnt = licLines.count
 val bsdLines = licLines.filter(line => line.contains("BSD"))
 bsdLines.count
 
-bsdLines.foreach(bLine => println(bLine))
-
 def isBSD(line: String) = { line.contains("BSD") }
 val isBSD = (line: String) => line.contains("BSD")
 val bsdLines1 = licLines.filter(isBSD)

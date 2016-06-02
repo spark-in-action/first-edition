@@ -59,7 +59,7 @@ toBreezeV(dv1) + toBreezeV(dv2)
 toBreezeV(dv1).dot(toBreezeV(dv2))
 
 val dm:Matrix = Matrices.dense(2,3,Array(5.0,0.0,0.0,3.0,1.0,4.0))
-val sm:Matrix = [CA]Matrices.sparse(2,3,Array(0,1,2,4),Array(0,1,0,1),Array(5.0,3.0,1.0,4.0))
+val sm:Matrix = Matrices.sparse(2,3,Array(0,1,2,4),Array(0,1,0,1),Array(5.0,3.0,1.0,4.0))
 sm.asInstanceOf[SparseMatrix].toDense
 dm.asInstanceOf[DenseMatrix].toSparse
 dm(1,1)
@@ -175,6 +175,7 @@ val model = LinearRegressionModel.load(sc, "hdfs:///path/to/saved/model")
 
 
 //Section 7.6.1
+import org.apache.spark.rdd.RDD
 def iterateLRwSGD(iterNums:Array[Int], stepSizes:Array[Double], train:RDD[LabeledPoint], test:RDD[LabeledPoint]) = {
   for(numIter <- iterNums; step <- stepSizes)
   {
