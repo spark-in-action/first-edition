@@ -1,0 +1,15 @@
+{
+  "name": "manning/spark-in-action",
+  "description": "This box contains Spark 1.6.1 on Ubuntu 14.04 64-bit for the Spark in Action book.",
+  "versions": [
+    {
+      "version": "1.0.0",
+      "providers": [
+        {
+          "name": "virtualbox",
+          "url": "https://s3-us-west-2.amazonaws.com/manning-code/spark-in-action.box"
+        }
+      ]
+    }
+  ]
+}
