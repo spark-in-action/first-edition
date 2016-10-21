@@ -6,7 +6,7 @@ val ssc = new StreamingContext(sc, Seconds(5))
 val filestream = ssc.textFileStream("/home/spark/ch06input")
 
 import java.sql.Timestamp
-case class Order(time: Timestamp, orderId:Long, clientId:Long, symbol:String, amount:Int, price:Double, buy:Boolean)
+case class Order(time: java.sql.Timestamp, orderId:Long, clientId:Long, symbol:String, amount:Int, price:Double, buy:Boolean)
 
 import java.text.SimpleDateFormat
 val orders = filestream.flatMap(line => {
@@ -41,7 +41,7 @@ val ssc = new StreamingContext(sc, Seconds(5))
 val filestream = ssc.textFileStream("/home/spark/ch06input")
 
 import java.sql.Timestamp
-case class Order(time: Timestamp, orderId:Long, clientId:Long, symbol:String, amount:Int, price:Double, buy:Boolean)
+case class Order(time: java.sql.Timestamp, orderId:Long, clientId:Long, symbol:String, amount:Int, price:Double, buy:Boolean)
 
 import java.text.SimpleDateFormat
 val orders = filestream.flatMap(line => {
@@ -147,7 +147,7 @@ val kafkaStream = KafkaUtils.
   createDirectStream[String, String, StringDecoder, StringDecoder](ssc, kafkaReceiverParams, Set("orders"))
 
 import java.sql.Timestamp
-case class Order(time: Timestamp, orderId:Long, clientId:Long, symbol:String, amount:Int, price:Double, buy:Boolean)
+case class Order(time: java.sql.Timestamp, orderId:Long, clientId:Long, symbol:String, amount:Int, price:Double, buy:Boolean)
 import java.text.SimpleDateFormat
 val orders = kafkaStream.flatMap(line => {
     val dateFormat = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss")
@@ -198,5 +198,18 @@ finalStream.foreachRDD((rdd) => {
 })
 
 sc.setCheckpointDir("/home/spark/checkpoint/")
-
 ssc.start()
+
+// section 6.4
+import spark.implicits._
+val structStream = spark.readStream.text("ch06input")
+italianPostsStream.isStreaming
+
+import org.apache.spark.sql.streaming.ProcessingTime
+val streamHandle = structStream.writeStream.format("console").trigger(ProcessingTime.create("5 seconds")).start()
+streamHandle.isActive()
+streamHandle.exception()
+streamHandle.stop()
+
+spark.streams.active
+

@@ -291,10 +291,10 @@ case class Point(x:Double, y:Double, z:Double)
 val vertices3d = sc.parallelize(Array((1L, Point(1,2,4)), (2L, Point(6,4,4)), (3L, Point(8,5,1)), (4L, Point(2,2,2)),
     (5L, Point(2,5,8)), (6L, Point(3,7,4)), (7L, Point(7,9,1)), (8L, Point(7,1,2)), (9L, Point(8,8,10)),
     (10L, Point(10,10,2)), (11L, Point(8,4,3)) ))
-val edges3d = sc.parallelize(Array(Edge(1, 2, 1.), Edge(2, 3, 1.), Edge(3, 4, 1.),
-    Edge(4, 1, 1.), Edge(1, 5, 1.), Edge(4, 5, 1.), Edge(2, 8, 1.),
-    Edge(4, 6, 1.), Edge(5, 6, 1.), Edge(6, 7, 1.), Edge(7, 2, 1.), Edge(2, 9, 1.),
-    Edge(7, 9, 1.), Edge(7, 10, 1.), Edge(10, 11, 1.), Edge(9, 11, 1.) ))
+val edges3d = sc.parallelize(Array(Edge(1, 2, 1.0), Edge(2, 3, 1.0), Edge(3, 4, 1.0),
+    Edge(4, 1, 1.0), Edge(1, 5, 1.0), Edge(4, 5, 1.0), Edge(2, 8, 1.0),
+    Edge(4, 6, 1.0), Edge(5, 6, 1.0), Edge(6, 7, 1.0), Edge(7, 2, 1.0), Edge(2, 9, 1.0),
+    Edge(7, 9, 1.0), Edge(7, 10, 1.0), Edge(10, 11, 1.0), Edge(9, 11, 1.0) ))
 val graph3d = Graph(vertices3d, edges3d)
 
 val calcDistance3d = (p1:Point, p2:Point) => {

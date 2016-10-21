@@ -1,7 +1,7 @@
 
 // Section 5.1.1
 
-import sqlContext.implicits._
+import spark.implicits._
 
 val itPostsRows = sc.textFile("first-edition/ch05/italianPosts.csv")
 val itPostsSplit = itPostsRows.map(x => x.split("~"))
@@ -15,8 +15,8 @@ val itPostsDF = itPostsRDD.toDF("commentCount", "lastActivityDate", "ownerUserId
 itPostsDF.printSchema
 
 import java.sql.Timestamp
-case class Post (commentCount:Option[Int], lastActivityDate:Option[Timestamp],
-  ownerUserId:Option[Long], body:String, score:Option[Int], creationDate:Option[Timestamp],
+case class Post (commentCount:Option[Int], lastActivityDate:Option[java.sql.Timestamp],
+  ownerUserId:Option[Long], body:String, score:Option[Int], creationDate:Option[java.sql.Timestamp],
   viewCount:Option[Int], title:String, tags:String, answerCount:Option[Int],
   acceptedAnswerId:Option[Long], postTypeId:Option[Long], id:Long)
 
@@ -68,22 +68,22 @@ val postSchema = StructType(Seq(
 import org.apache.spark.sql.Row
 def stringToRow(row:String):Row = {
   val r = row.split("~")
-  Row(r(0).toIntSafe,
-    r(1).toTimestampSafe,
-    r(2).toLongSafe,
+  Row(r(0).toIntSafe.getOrElse(null),
+    r(1).toTimestampSafe.getOrElse(null),
+    r(2).toLongSafe.getOrElse(null),
     r(3),
-    r(4).toIntSafe,
-    r(5).toTimestampSafe,
-    r(6).toIntSafe,
+    r(4).toIntSafe.getOrElse(null),
+    r(5).toTimestampSafe.getOrElse(null),
+    r(6).toIntSafe.getOrElse(null),
     r(7),
     r(8),
-    r(9).toIntSafe,
-    r(10).toLongSafe,
-    r(11).toLongSafe,
+    r(9).toIntSafe.getOrElse(null),
+    r(10).toLongSafe.getOrElse(null),
+    r(11).toLongSafe.getOrElse(null),
     r(12).toLong)
 }
 val rowRDD = itPostsRows.map(row => stringToRow(row))
-val itPostsDFStruct = sqlContext.createDataFrame(rowRDD, postSchema)
+val itPostsDFStruct = spark.createDataFrame(rowRDD, postSchema)
 itPostsDFStruct.columns
 itPostsDFStruct.dtypes
 
@@ -128,7 +128,7 @@ postsDf.filter('postTypeId === 1).select('ownerUserId, 'id, 'creationDate, lag('
 
 
 val countTags = udf((tags: String) => "&lt;".r.findAllMatchIn(tags).length)
-val countTags = sqlContext.udf.register("countTags", (tags: String) => "&lt;".r.findAllMatchIn(tags).length)
+val countTags = spark.udf.register("countTags", (tags: String) => "&lt;".r.findAllMatchIn(tags).length)
 postsDf.filter('postTypeId === 1).select('tags, countTags('tags) as "tagCnt").show(10, false)
 
 //Section 5.1.4
@@ -142,10 +142,10 @@ val postsDfCorrected = postsDf.na.replace(Array("id", "acceptedAnswerId"), Map(1
 //Section 5.1.5
 val postsRdd = postsDf.rdd
 
-val postsMapped = postsDf.map(row => Row.fromSeq(
+val postsMapped = postsDf.rdd.map(row => Row.fromSeq(
   row.toSeq.updated(3, row.getString(3).replace("&lt;","<").replace("&gt;",">")).
     updated(8, row.getString(8).replace("&lt;","<").replace("&gt;",">"))))
-val postsDfNew = sqlContext.createDataFrame(postsMapped, postsDf.schema)
+val postsDfNew = spark.createDataFrame(postsMapped, postsDf.schema)
 
 //Section 5.1.6
 postsDfNew.groupBy('ownerUserId, 'tags, 'postTypeId).count.orderBy('ownerUserId desc).show(10)
@@ -162,6 +162,9 @@ smplDf.rollup('ownerUserId, 'tags, 'postTypeId).count.show()
 
 smplDf.cube('ownerUserId, 'tags, 'postTypeId).count.show()
 
+spark.sql("SET spark.sql.caseSensitive=true")
+spark.conf.set("spark.sql.caseSensitive", "true")
+
 //Section 5.1.7
 val itVotesRaw = sc.textFile("first-edition/ch05/italianVotes.csv").map(x => x.split("~"))
 val itVotesRows = itVotesRaw.map(row => Row(row(0).toLong, row(1).toLong, row(2).toInt, Timestamp.valueOf(row(3))))
@@ -171,27 +174,27 @@ val votesSchema = StructType(Seq(
   StructField("voteTypeId", IntegerType, false),
   StructField("creationDate", TimestampType, false))
   )
-val votesDf = sqlContext.createDataFrame(itVotesRows, votesSchema)
+val votesDf = spark.createDataFrame(itVotesRows, votesSchema)
 
 val postsVotes = postsDf.join(votesDf, postsDf("id") === votesDf("postId"))
 val postsVotesOuter = postsDf.join(votesDf, postsDf("id") === votesDf("postId"), "outer")
 
-//Section 5.1.8
-sqlContext.sql("SET spark.sql.caseSensitive=true")
-sqlContext.setConf("spark.sql.caseSensitive", "true")
-
-//Section 5.2.1
-postsDf.registerTempTable("posts_temp")
+//Section 5.3.1
+postsDf.createOrReplaceTempView("posts_temp")
 postsDf.write.saveAsTable("posts")
 votesDf.write.saveAsTable("votes")
 
-//Section 5.2.2
+spark.catalog.listTables().show()
+spark.catalog.listColumns("votes").show()
+spark.catalog.listFunctions.show()
+
+//Section 5.3.2
 val resultDf = sql("select * from posts")
 
 spark-sql> select substring(title, 0, 70) from posts where postTypeId = 1 order by creationDate desc limit 3;
 $ spark-sql -e "select substring(title, 0, 70) from posts where postTypeId = 1 order by creationDate desc limit 3"
 
-//Section 5.3.1
+//Section 5.4.2
 postsDf.write.format("json").saveAsTable("postsjson")
 
 sql("select * from postsjson")
@@ -201,12 +204,12 @@ props.setProperty("user", "user")
 props.setProperty("password", "password")
 postsDf.write.jdbc("jdbc:postgresql://postgresrv/mydb", "posts", props)
 
-//Section 5.3.2
+//Section 5.4.3
 
-val postsDf = sqlContext.read.table("posts")
-val postsDf = sqlContext.table("posts")
+val postsDf = spark.read.table("posts")
+val postsDf = spark.table("posts")
 
-val result = sqlContext.read.jdbc("jdbc:postgresql://postgresrv/mydb", "posts", Array("viewCount > 3"), props)
+val result = spark.read.jdbc("jdbc:postgresql://postgresrv/mydb", "posts", Array("viewCount > 3"), props)
 
 sql("CREATE TEMPORARY TABLE postsjdbc "+
   "USING org.apache.spark.sql.jdbc "+
@@ -221,8 +224,8 @@ sql("CREATE TEMPORARY TABLE postsParquet "+
   "OPTIONS (path '/path/to/parquet_file')")
 val resParq = sql("select * from postsParquet")
 
-//Section 5.4
+//Section 5.5
 
 val postsFiltered = postsDf.filter('postTypeId === 1).withColumn("ratio", 'viewCount / 'score).where('ratio < 35)
 
-
+postsFiltered.explain(true)

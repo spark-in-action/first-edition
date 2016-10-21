@@ -61,13 +61,13 @@
     <dependency>
       <groupId>org.scala-lang</groupId>
       <artifactId>scala-library</artifactId>
-      <version>2.10.4</version>
+      <version>2.11.8</version>
       <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.apache.spark</groupId>
-      <artifactId>spark-core_2.10</artifactId>
-      <version>1.6.1</version>
+      <artifactId>spark-core_2.11</artifactId>
+      <version>2.0.0</version>
       <scope>provided</scope>
       <exclusions>
         <exclusion>
@@ -75,7 +75,7 @@
           <groupId>org.apache.avro</groupId>
         </exclusion>
         <exclusion>
-          <artifactId>chill_2.10</artifactId>
+          <artifactId>chill_2.11</artifactId>
           <groupId>com.twitter</groupId>
         </exclusion>
         <exclusion>
@@ -91,19 +91,19 @@
           <groupId>org.apache.hadoop</groupId>
         </exclusion>
         <exclusion>
-          <artifactId>spark-launcher_2.10</artifactId>
+          <artifactId>spark-launcher_2.11</artifactId>
           <groupId>org.apache.spark</groupId>
         </exclusion>
         <exclusion>
-          <artifactId>spark-network-common_2.10</artifactId>
+          <artifactId>spark-network-common_2.11</artifactId>
           <groupId>org.apache.spark</groupId>
         </exclusion>
         <exclusion>
-          <artifactId>spark-network-shuffle_2.10</artifactId>
+          <artifactId>spark-network-shuffle_2.11</artifactId>
           <groupId>org.apache.spark</groupId>
         </exclusion>
         <exclusion>
-          <artifactId>spark-unsafe_2.10</artifactId>
+          <artifactId>spark-unsafe_2.11</artifactId>
           <groupId>org.apache.spark</groupId>
         </exclusion>
         <exclusion>
@@ -115,8 +115,8 @@
           <groupId>org.apache.curator</groupId>
         </exclusion>
         <exclusion>
-          <artifactId>javax.servlet</artifactId>
-          <groupId>org.eclipse.jetty.orbit</groupId>
+          <artifactId>javax.servlet-api</artifactId>
+          <groupId>javax.servlet</groupId>
         </exclusion>
         <exclusion>
           <artifactId>commons-lang3</artifactId>
@@ -151,24 +151,28 @@
           <groupId>commons-net</groupId>
         </exclusion>
         <exclusion>
-          <artifactId>akka-remote_2.10</artifactId>
-          <groupId>com.typesafe.akka</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>akka-slf4j_2.10</artifactId>
-          <groupId>com.typesafe.akka</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>json4s-jackson_2.10</artifactId>
+          <artifactId>json4s-jackson_2.11</artifactId>
           <groupId>org.json4s</groupId>
         </exclusion>
         <exclusion>
-          <artifactId>jersey-server</artifactId>
-          <groupId>com.sun.jersey</groupId>
+          <artifactId>jersey-client</artifactId>
+          <groupId>org.glassfish.jersey.core</groupId>
         </exclusion>
         <exclusion>
-          <artifactId>jersey-core</artifactId>
-          <groupId>com.sun.jersey</groupId>
+          <artifactId>jersey-common</artifactId>
+          <groupId>org.glassfish.jersey.core</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>jersey-server</artifactId>
+          <groupId>org.glassfish.jersey.core</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>jersey-container-servlet</artifactId>
+          <groupId>org.glassfish.jersey.containers</groupId>
+        </exclusion>
+        <exclusion>
+          <artifactId>jersey-container-servlet-core</artifactId>
+          <groupId>org.glassfish.jersey.containers</groupId>
         </exclusion>
         <exclusion>
           <artifactId>mesos</artifactId>
@@ -203,7 +207,7 @@
           <groupId>com.fasterxml.jackson.core</groupId>
         </exclusion>
         <exclusion>
-          <artifactId>jackson-module-scala_2.10</artifactId>
+          <artifactId>jackson-module-scala_2.11</artifactId>
           <groupId>com.fasterxml.jackson.module</groupId>
         </exclusion>
         <exclusion>
@@ -213,10 +217,6 @@
         <exclusion>
           <artifactId>oro</artifactId>
           <groupId>oro</groupId>
-        </exclusion>
-        <exclusion>
-          <artifactId>tachyon-client</artifactId>
-          <groupId>org.tachyonproject</groupId>
         </exclusion>
         <exclusion>
           <artifactId>pyrolite</artifactId>
@@ -230,11 +230,11 @@
     </dependency>
   </dependencies>
   <properties>
-    <scala.version>2.10.4</scala.version>
+    <scala.version>2.11.8</scala.version>
     <encoding>UTF-8</encoding>
     <maven.compiler.source>1.7</maven.compiler.source>
-    <spark.version>1.6.1</spark.version>
-    <scala.tools.version>2.10</scala.tools.version>
+    <spark.version>2.0.0</spark.version>
+    <scala.tools.version>2.11</scala.tools.version>
     <maven.compiler.target>1.7</maven.compiler.target>
   </properties>
 </project>

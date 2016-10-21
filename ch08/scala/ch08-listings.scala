@@ -1,9 +1,9 @@
 
-import sqlContext.implicits._
+import spark.implicits._
 
 //section 8.2.2
-val census_raw = sc.textFile("first-edition/ch08/adult.raw", 4).map(x => x.split(", ")).
-    map(row => row.map(x => try { x.toDouble } catch { case _ => x }))
+val census_raw = sc.textFile("first-edition/ch08/adult.raw", 4).map(x => x.split(",")).
+    map(row => row.map(x => try { x.toDouble } catch { case _ : Throwable => x }))
 
 import org.apache.spark.sql.types.{StructType,StructField,StringType,DoubleType}
 val adultschema = StructType(Array(
@@ -23,10 +23,10 @@ val adultschema = StructType(Array(
     StructField("income",StringType,true)
 ))
 import org.apache.spark.sql.Row
-val dfraw = sqlContext.applySchema(census_raw.map(Row.fromSeq(_)), adultschema)
+val dfraw = spark.createDataFrame(census_raw.map(Row.fromSeq(_)), adultschema)
 dfraw.show()
 
-dfraw.groupBy(dfraw("workclass")).count().foreach(println)
+dfraw.groupBy(dfraw("workclass")).count().rdd.foreach(println)
 //Missing data imputation
 val dfrawrp = dfraw.na.replace(Array("workclass"), Map("?" -> "Private"))
 val dfrawrpl = dfrawrp.na.replace(Array("occupation"), Map("?" -> "Prof-specialty"))
@@ -99,12 +99,12 @@ def computePRCurve(train:DataFrame, valid:DataFrame, lrmodel:LogisticRegressionM
     import org.apache.spark.mllib.evaluation.BinaryClassificationMetrics
     for(threshold <- 0 to 10)
     {
-        var thr = threshold/10.
+        var thr = threshold/10.0
         if(threshold == 10)
             thr -= 0.001
         lrmodel.setThreshold(thr)
         val validpredicts = lrmodel.transform(valid)
-        val validPredRdd = validpredicts.map(row => (row.getDouble(4), row.getDouble(1)))
+        val validPredRdd = validpredicts.rdd.map(row => (row.getDouble(4), row.getDouble(1)))
         val bcm = new BinaryClassificationMetrics(validPredRdd)
         val pr = bcm.pr.collect()(1)
         println("%.1f: R=%f, P=%f".format(thr, pr._1, pr._2))
@@ -127,12 +127,12 @@ def computeROCCurve(train:DataFrame, valid:DataFrame, lrmodel:LogisticRegression
     import org.apache.spark.mllib.evaluation.BinaryClassificationMetrics
     for(threshold <- 0 to 10)
     {
-        var thr = threshold/10.
+        var thr = threshold/10.0
         if(threshold == 10)
             thr -= 0.001
         lrmodel.setThreshold(thr)
         val validpredicts = lrmodel.transform(valid)
-        val validPredRdd = validpredicts.map(row => (row.getDouble(4), row.getDouble(1)))
+        val validPredRdd = validpredicts.rdd.map(row => (row.getDouble(4), row.getDouble(1)))
         val bcm = new BinaryClassificationMetrics(validPredRdd)
         val pr = bcm.roc.collect()(1)
         println("%.1f: FPR=%f, TPR=%f".format(thr, pr._1, pr._2))
@@ -159,34 +159,37 @@ val paramGrid = new ParamGridBuilder().addGrid(lr.maxIter, Array(1000)).
     addGrid(lr.regParam, Array(0.0001, 0.001, 0.005, 0.01, 0.05, 0.1, 0.5)).build()
 cv.setEstimatorParamMaps(paramGrid)
 val cvmodel = cv.fit(adulttrain)
-cvmodel.bestModel.asInstanceOf[LogisticRegressionModel].weights
+cvmodel.bestModel.asInstanceOf[LogisticRegressionModel].coefficients
 cvmodel.bestModel.parent.asInstanceOf[LogisticRegression].getRegParam
 new BinaryClassificationEvaluator().evaluate(cvmodel.bestModel.transform(adultvalid))
 
 //section 8.2.6
+import org.apache.spark.sql.types.{StructType,StructField,StringType,IntegerType}
 val penschema = StructType(Array(
-    StructField("pix1",DoubleType,true),
-    StructField("pix2",DoubleType,true),
-    StructField("pix3",DoubleType,true),
-    StructField("pix4",DoubleType,true),
-    StructField("pix5",DoubleType,true),
-    StructField("pix6",DoubleType,true),
-    StructField("pix7",DoubleType,true),
-    StructField("pix8",DoubleType,true),
-    StructField("pix9",DoubleType,true),
-    StructField("pix10",DoubleType,true),
-    StructField("pix11",DoubleType,true),
-    StructField("pix12",DoubleType,true),
-    StructField("pix13",DoubleType,true),
-    StructField("pix14",DoubleType,true),
-    StructField("pix15",DoubleType,true),
-    StructField("pix16",DoubleType,true),
-    StructField("label",DoubleType,true)
+    StructField("pix1",IntegerType,true),
+    StructField("pix2",IntegerType,true),
+    StructField("pix3",IntegerType,true),
+    StructField("pix4",IntegerType,true),
+    StructField("pix5",IntegerType,true),
+    StructField("pix6",IntegerType,true),
+    StructField("pix7",IntegerType,true),
+    StructField("pix8",IntegerType,true),
+    StructField("pix9",IntegerType,true),
+    StructField("pix10",IntegerType,true),
+    StructField("pix11",IntegerType,true),
+    StructField("pix12",IntegerType,true),
+    StructField("pix13",IntegerType,true),
+    StructField("pix14",IntegerType,true),
+    StructField("pix15",IntegerType,true),
+    StructField("pix16",IntegerType,true),
+    StructField("label",IntegerType,true)
 ))
 val pen_raw = sc.textFile("first-edition/ch08/penbased.dat", 4).map(x => x.split(", ")).
-    map(row => row.map(x => x.toDouble))
+    map(row => row.map(x => x.toDouble.toInt))
 
-val dfpen = sqlContext.applySchema(pen_raw.map(Row.fromSeq(_)), penschema)
+import org.apache.spark.sql.Row
+val dfpen = spark.createDataFrame(pen_raw.map(Row.fromSeq(_)), penschema)
+import org.apache.spark.ml.feature.VectorAssembler
 val va = new VectorAssembler().setOutputCol("features")
 va.setInputCols(dfpen.columns.diff(Array("label")))
 val penlpoints = va.transform(dfpen).select("features", "label")
@@ -203,7 +206,7 @@ ovrest.setClassifier(penlr)
 val ovrestmodel = ovrest.fit(pentrain)
 
 val penresult = ovrestmodel.transform(penvalid)
-val penPreds = penresult.select("prediction", "label").map(row => (row.getDouble(0), row.getDouble(1)))
+val penPreds = penresult.select("prediction", "label").rdd.map(row => (row.getDouble(0), row.getDouble(1)))
 
 import org.apache.spark.mllib.evaluation.MulticlassMetrics
 val penmm = new MulticlassMetrics(penPreds)
@@ -255,7 +258,7 @@ dtmodel.rootNode.asInstanceOf[InternalNode].leftChild
 dtmodel.rootNode.asInstanceOf[InternalNode].rightChild
 
 val dtpredicts = dtmodel.transform(pendtvalid)
-val dtresrdd = dtpredicts.select("prediction", "label").map(row => (row.getDouble(0), row.getDouble(1)))
+val dtresrdd = dtpredicts.select("prediction", "label").rdd.map(row => (row.getDouble(0), row.getDouble(1)))
 val dtmm = new MulticlassMetrics(dtresrdd)
 dtmm.precision
 //0.951442968392121
@@ -278,7 +281,7 @@ rf.setMaxDepth(20)
 val rfmodel = rf.fit(pendttrain)
 rfmodel.trees
 val rfpredicts = rfmodel.transform(pendtvalid)
-val rfresrdd = rfpredicts.select("prediction", "label").map(row => (row.getDouble(0), row.getDouble(1)))
+val rfresrdd = rfpredicts.select("prediction", "label").rdd.map(row => (row.getDouble(0), row.getDouble(1)))
 val rfmm = new MulticlassMetrics(rfresrdd)
 rfmm.precision
 //0.9894640403114979
@@ -296,24 +299,24 @@ rfmm.confusionMatrix
 
 
 //section 8.4.1
-import org.apache.spark.mllib.linalg.Vector
-val penflrdd = penlpoints.map(row => (row(0).asInstanceOf[Vector], row(1).asInstanceOf[Double]))
-val penrdd = penflrdd.map(x => x._1).cache()
-import org.apache.spark.mllib.clustering.KMeans
-val kmmodel = KMeans.train(penrdd, 10, 5000, 20)
+import org.apache.spark.ml.clustering.KMeans
+val kmeans = new KMeans()
+kmeans.setK(10)
+kmeans.setMaxIter(500)
+val kmmodel = kmeans.fit(penlpoints)
 
-kmmodel.computeCost(penrdd)
-//4.930151488324314E7
-math.sqrt(kmmodel.computeCost(penrdd)/penrdd.count())
-//66.97176923983041
+kmmodel.computeCost(penlpoints)
+//4.517530920539787E7
+math.sqrt(kmmodel.computeCost(penlpoints)/penlpoints.count())
+//67.5102817068467
 
-val kmpredicts = penflrdd.map(feat_lbl => (kmmodel.predict(feat_lbl._1).toDouble, feat_lbl._2))
-
+val kmpredicts = kmmodel.transform(penlpoints)
 
 import org.apache.spark.rdd.RDD
-//rdd contains tuples (prediction, label)
-def printContingency(rdd:RDD[(Double, Double)], labels:Seq[Int])
+//df has to contain at least two columns named prediction and label
+def printContingency(df:org.apache.spark.sql.DataFrame, labels:Seq[Int])
 {
+    val rdd:RDD[(Int, Int)] = df.select('label, 'prediction).rdd.map(row => (row.getInt(0), row.getInt(1))).cache()
     val numl = labels.size
     val tablew = 6*numl + 10
     var divider = "".padTo(10, '-')
@@ -326,7 +329,7 @@ def printContingency(rdd:RDD[(Double, Double)], labels:Seq[Int])
         print("|Pred"+l)
     println
     println(divider)
-    val labelMap = scala.collection.mutable.Map[Double, (Double, Long)]()
+    val labelMap = scala.collection.mutable.Map[Int, (Int, Long)]()
     for(l <- labels)
     {
         //filtering by predicted labels
@@ -344,8 +347,7 @@ def printContingency(rdd:RDD[(Double, Double)], labels:Seq[Int])
                 sum += topLabelCount._2
             }
             //else leave the previous cluster in
-        }
-        else
+        } else
         {
             labelMap += (topLabelCount._1 -> (l, topLabelCount._2))
             sum += topLabelCount._2
@@ -367,6 +369,7 @@ def printContingency(rdd:RDD[(Double, Double)], labels:Seq[Int])
         println
         println(divider)
     }
+    rdd.unpersist()
     println("Purity: "+sum.toDouble/rdd.count())
     println("Predicted->original label map: "+labelMap.mapValues(x => x._1))
 }
@@ -394,5 +397,5 @@ printContingency(kmpredicts, 0 to 9)
 //      9    |    9|    0|    1|   88|   82|   11|  199|    0|    1|  664
 // ----------+-----+-----+-----+-----+-----+-----+-----+-----+-----+-----
 // Purity: 0.6672125181950509
-// Predicted->original label map: Map(8.0 -> 8.0, 2.0 -> 6.0, 5.0 -> 0.0, 4.0 -> 1.0, 7.0 -> 5.0, 9.0 -> 9.0, 3.0 -> 4.0, 6.0 -> 3.0, 0.0 -> 2.0)
+// Predicted->original label map: Map(8 -> 8, 2 -> 6, 5 -> 0, 4 -> 1, 7 -> 5, 9 -> 9, 3 -> 4, 6 -> 3, 0 -> 2)
 
