@@ -1,6 +1,6 @@
 {
   "name": "manning/spark-in-action",
-  "description": "This box contains Spark 1.6.1 on Ubuntu 14.04 64-bit for the Spark in Action book.",
+  "description": "This box contains Spark 2.0.0 on Ubuntu 14.04 64-bit for the Spark in Action book.",
   "versions": [
     {
       "version": "1.0.0",
