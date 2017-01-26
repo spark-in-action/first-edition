@@ -17,6 +17,7 @@ bsdLines.foreach(lambda bLine: print(bLine))
 
 def isBSD(line):
     return "BSD" in line
+
 bsdLines1 = licLines.filter(isBSD)
 bsdLines1.count()
 bsdLines.foreach(lambda bLine: print(bLine))
