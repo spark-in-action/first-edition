@@ -63,7 +63,7 @@ def toLongSafe(inval):
     return long(inval)
   except ValueError:
     return None
-    
+
 def stringToPost(row):
   r = row.encode('utf8').split("~")
   return Row(
@@ -236,10 +236,6 @@ postsDf.na.replace(1177, 3000, ["id", "acceptedAnswerId"]).show()
 postsRdd = postsDf.rdd
 
 def replaceLtGt(row):
-	#d = row.asDict()
-	#d['tags'] = d['tags'].replace("&lt;","<").replace("&gt;",">")
-	#d['body'] = d['body'].replace("&lt;","<").replace("&gt;",">")
-	#return Row(**d)
 	return Row(
 	  commentCount = row.commentCount,
     lastActivityDate = row.lastActivityDate,
@@ -255,10 +251,10 @@ def replaceLtGt(row):
     postTypeId = row.postTypeId,
     id = row.id)
 
-postsMapped = postsDf.map(replaceLtGt)
+postsMapped = postsRdd.map(replaceLtGt)
 
 def sortSchema(schema):
-	fields = {f.name: f for f in s.fields}
+	fields = {f.name: f for f in schema.fields}
 	names = sorted(fields.keys())
 	return StructType([fields[f] for f in names])
 
