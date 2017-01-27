@@ -130,7 +130,7 @@ dfpen = sqlContext.createDataFrame(pen_raw.map(Row.fromSeq(_)), penschema)
 def parseRow(row):
     d = {("pix"+str(i)): row[i-1] for i in range(1,17)}
     d.update({"label": row[16]})
-    return d
+    return Row(**d)
 
 dfpen = sqlContext.createDataFrame(pen_raw.map(parseRow), penschema)
 va = VectorAssembler(outputCol="features", inputCols=dfpen.columns[0:-1])
@@ -162,7 +162,7 @@ dtmodel = dt.fit(pendttrain)
 # rootNode is not accessible in Python
 
 dtpredicts = dtmodel.transform(pendtvalid)
-dtresrdd = dtpredicts.select("prediction", "label").map(lambda row:  (row.prediction, row.label))
+dtresrdd = dtpredicts.select("prediction", "label").rdd.map(lambda row:  (row.prediction, row.label))
 
 from pyspark.mllib.evaluation import MulticlassMetrics
 dtmm = MulticlassMetrics(dtresrdd)
@@ -196,7 +196,7 @@ rf = RandomForestClassifier(maxDepth=20)
 rfmodel = rf.fit(pendttrain)
 # RandomForestModel doesn't expose trees field in Python
 rfpredicts = rfmodel.transform(pendtvalid)
-rfresrdd = rfpredicts.select("prediction", "label").map(lambda row:  (row.prediction, row.label))
+rfresrdd = rfpredicts.select("prediction", "label").rdd.map(lambda row:  (row.prediction, row.label))
 rfmm = MulticlassMetrics(rfresrdd)
 rfmm.precision()
 #0.9894640403114979
@@ -223,7 +223,8 @@ print(rfmm.confusionMatrix())
 #               181.]])
 
 #section 8.4.1
-penflrdd = penlpoints.map(lambda row:  (row.features, row.label))
+from pyspark.mllib.linalg import DenseVector
+penflrdd = penlpoints.rdd.map(lambda row: (DenseVector(row.features.toArray()), row.label))
 penrdd = penflrdd.map(lambda x:  x[0]).cache()
 
 from pyspark.mllib.clustering import KMeans
