@@ -2,7 +2,7 @@
 import spark.implicits._
 
 //section 8.2.2
-val census_raw = sc.textFile("first-edition/ch08/adult.raw", 4).map(x => x.split(",")).
+val census_raw = sc.textFile("first-edition/ch08/adult.raw", 4).map(x => x.split(",").map(_.trim)).
     map(row => row.map(x => try { x.toDouble } catch { case _ : Throwable => x }))
 
 import org.apache.spark.sql.types.{StructType,StructField,StringType,DoubleType}
