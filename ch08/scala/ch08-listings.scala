@@ -80,7 +80,7 @@ val lrmodel = lr.fit(adulttrain)
 import org.apache.spark.ml.param.ParamMap
 val lrmodel = lr.fit(adulttrain, ParamMap(lr.regParam -> 0.01, lr.maxIter -> 500, lr.fitIntercept -> true))
 
-lrmodel.weights
+lrmodel.coefficients
 lrmodel.intercept
 
 //section 8.2.3
